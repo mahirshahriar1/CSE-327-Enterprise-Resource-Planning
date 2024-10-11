@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1.0" />
+    <title>Sign Up - Bob's Inventory</title>
+
+    <!-- Montserrat Font -->
+    <link
+      href="https://fonts.googleapis.com/css2?family=Montserrat:wght@100;200;300;400;500;600;700;800;900&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Material Icons -->
+    <link
+      href="https://fonts.googleapis.com/icon?family=Material+Icons+Outlined"
+      rel="stylesheet"
+    />
+
+    <!-- Custom CSS -->
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/register.css" />
+  </head>
+  <body>
+    <div class="">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-left">
+          <span class="material-icons-outlined">inventory</span>
+          <span>Bob's Inventory</span>
+        </div>
+      </header>
+      <!-- End Header -->
+
+      <!-- Main -->
+      <main class="main-container">
+        <div class="main-title">
+          <p class="font-weight-bold">SIGN UP</p>
+        </div>
+
+        <form id="signup-form" class="signup-card">
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" required />
+          </div>          
+          <div class="form-group">
+            <label for="role">Role</label>
+            <input type="text" id="role" required />
+          </div>
+          <div class="form-group">
+            <label for="department">Department</label>
+            <input type="text" id="department" required />
+          </div>
+          <button type="submit" class="signup-btn">Sign Up</button>
+        </form>
+      </main>
+      <!-- End Main -->
+    </div>
+
+    <!-- Custom JS -->
+    <script src="js/register.js"></script>
+  </body>
+</html>

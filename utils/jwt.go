@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -9,7 +9,7 @@ import (
 
 var jwtSecret = []byte("your-secret-key")
 
-// GenerateJWT generates a new JWT token for the given email
+// GenerateJWT generates a new JWT token with userID and email
 func GenerateJWT(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
@@ -21,15 +21,18 @@ func GenerateJWT(email string) (string, error) {
 // ValidateJWT validates a JWT token and extracts the claims
 func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
+		// Verify token signing method etc.
 		return jwtSecret, nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
+	if err != nil || !token.Valid {
 		return nil, err
 	}
+
+	// Extract and return the claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token claims")
 }

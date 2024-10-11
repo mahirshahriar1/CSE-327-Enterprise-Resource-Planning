@@ -1,0 +1,27 @@
+<aside id="sidebar">
+  <div class="sidebar-title">
+    <div class="sidebar-brand">
+      <span class="material-icons-outlined">inventory</span> Bob's Inventory
+    </div>
+    <span class="material-icons-outlined" onclick="closeSidebar()">close</span>
+  </div>
+
+  <ul class="sidebar-list">
+    <li class="sidebar-list-item">
+      <a href="index.html">
+        <span class="material-icons-outlined">dashboard</span> Dashboard
+      </a>
+    </li>
+    <li class="sidebar-list-item active">
+      <a href="products.html">
+        <span class="material-icons-outlined">inventory_2</span> Products
+      </a>
+    </li>
+    <li class="sidebar-list-item">
+      <a href="#">
+        <span class="material-icons-outlined">fact_check</span> Inventory
+      </a>
+    </li>
+    <!-- Add more links as needed -->
+  </ul>
+</aside>
