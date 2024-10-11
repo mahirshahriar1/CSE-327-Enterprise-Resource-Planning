@@ -2,39 +2,34 @@ package main
 
 import (
 	"erp/db"
-	"erp/handlers"
+	"erp/routes"
 	"log"
 	"net/http"
-	"erp/middleware"
 
-	"github.com/gorilla/mux"
+	"github.com/gorilla/handlers"
 	_ "github.com/lib/pq"
 )
 
 func main() {
 	// Initialize the database connection
 	var err error
-	db.DB, err = db.InitDB()
+	dbInstance, err := db.InitDB() // Use a local variable to avoid global state
 	if err != nil {
 		log.Fatal("Failed to connect to the database:", err)
 	}
+	defer dbInstance.Close()
 
-	// Create the router
-	router := mux.NewRouter()
+	// Initialize the routes, passing the db instance
+	router := routes.InitRoutes(dbInstance)
 
-	// Define the routes
-	router.HandleFunc("/signup", handlers.SignUp).Methods("POST")
-	router.HandleFunc("/check-user", handlers.CheckUser).Methods("POST")
-	router.HandleFunc("/set-new-password", handlers.SetNewPassword).Methods("POST")
-	router.HandleFunc("/login", handlers.Login).Methods("POST")
+	// Set up CORS
+	corsObj := handlers.AllowedOrigins([]string{"*"}) // You can replace "*" with your frontend URL
+	corsHeaders := handlers.AllowedHeaders([]string{"Content-Type", "Authorization"})
+	corsMethods := handlers.AllowedMethods([]string{"GET", "POST", "PUT", "DELETE", "OPTIONS"})
 
-	// Protected route: requires JWT authentication
-	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(handlers.Dashboard))).Methods("GET")
-
-
-	// Start the server
+	// Start the server with CORS
 	log.Println("Server started on :8080")
-	err = http.ListenAndServe(":8080", router)
+	err = http.ListenAndServe(":8080", handlers.CORS(corsObj, corsHeaders, corsMethods)(router))
 	if err != nil {
 		log.Fatal("Failed to start server:", err)
 	}

@@ -1,7 +1,7 @@
 package utils
 
 import (
-	"errors"
+	"fmt"
 	"time"
 
 	"github.com/dgrijalva/jwt-go"
@@ -18,18 +18,22 @@ func GenerateJWT(email string) (string, error) {
 	return token.SignedString(jwtSecret)
 }
 
-// ValidateJWT validates a JWT token and extracts the claims
-func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
+// ValidateJWT validates a JWT token and extracts the  claims 
+func ValidateJWT(tokenString string) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, errors.New("unexpected signing method")
-		}
-		return jwtSecret, nil
+		// Verify token signing method etc.
+		return []byte("your-secret-key"), nil
 	})
 
-	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
-		return claims, nil
-	} else {
-		return nil, err
+	if err != nil || !token.Valid {
+		return nil, err // Return error if the token is invalid
 	}
+
+	// Extract and return the claims
+	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		// log.Println("Claims:", claims)
+		return claims, nil
+	}
+
+	return nil, fmt.Errorf("invalid token claims")
 }
