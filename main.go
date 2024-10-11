@@ -2,12 +2,10 @@ package main
 
 import (
 	"erp/db"
-	"erp/handlers"
+	"erp/routes"
 	"log"
 	"net/http"
-	"erp/middleware"
 
-	"github.com/gorilla/mux"
 	_ "github.com/lib/pq"
 )
 
@@ -19,18 +17,8 @@ func main() {
 		log.Fatal("Failed to connect to the database:", err)
 	}
 
-	// Create the router
-	router := mux.NewRouter()
-
-	// Define the routes
-	router.HandleFunc("/signup", handlers.SignUp).Methods("POST")
-	router.HandleFunc("/check-user", handlers.CheckUser).Methods("POST")
-	router.HandleFunc("/set-new-password", handlers.SetNewPassword).Methods("POST")
-	router.HandleFunc("/login", handlers.Login).Methods("POST")
-
-	// Protected route: requires JWT authentication
-	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(handlers.Dashboard))).Methods("GET")
-
+	// Initialize the routes
+	router := routes.InitRoutes()
 
 	// Start the server
 	log.Println("Server started on :8080")
