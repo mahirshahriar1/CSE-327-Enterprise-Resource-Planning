@@ -31,6 +31,7 @@ func ValidateJWT(tokenString string) (map[string]interface{}, error) {
 
 	// Extract and return the claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
+		// log.Println("Claims:", claims)
 		return claims, nil
 	}
 

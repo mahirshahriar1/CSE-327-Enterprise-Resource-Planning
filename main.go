@@ -12,13 +12,14 @@ import (
 func main() {
 	// Initialize the database connection
 	var err error
-	db.DB, err = db.InitDB()
+	dbInstance, err := db.InitDB() // Use a local variable to avoid global state
 	if err != nil {
 		log.Fatal("Failed to connect to the database:", err)
 	}
+	defer dbInstance.Close()
 
-	// Initialize the routes
-	router := routes.InitRoutes()
+	// Initialize the routes, pass the db instance
+	router := routes.InitRoutes(dbInstance)
 
 	// Start the server
 	log.Println("Server started on :8080")
