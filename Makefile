@@ -3,7 +3,7 @@ DB_USER=postgres
 DB_NAME=erp
 MIGRATION_FILE=db/migration.sql
 APP_BINARY=main.go
-TEST_PATTERN=./...
+TEST_PATTERN=./test
 
 # Declare targets as PHONY
 .PHONY: run migrate test test-race test-cover clean help

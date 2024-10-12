@@ -1,8 +1,9 @@
 package routes
 
 import (
-	auth_handlers "erp/handlers/Auth"
+	"database/sql"
 	dashboard "erp/handlers/Dashboard"
+	"erp/handlers/auth_handlers"
 	"erp/middleware"
 	"net/http"
 
@@ -10,20 +11,24 @@ import (
 )
 
 // InitRoutes sets up the application routes
-func InitRoutes() *mux.Router {
+func InitRoutes(db *sql.DB) *mux.Router {
 	router := mux.NewRouter()
 
+	// Initialize UserStore and AuthHandlers
+	userStore := &auth_handlers.DBUserStore{DB: db}
+	authHandlers := &auth_handlers.AuthHandlers{UserStore: userStore}
+
 	// Public routes (no authentication required)
-	router.HandleFunc("/signup", auth_handlers.SignUp).Methods("POST")
-	router.HandleFunc("/check-user", auth_handlers.CheckUser).Methods("POST")
-	router.HandleFunc("/set-new-password", auth_handlers.SetNewPassword).Methods("POST")
-	router.HandleFunc("/login", auth_handlers.Login).Methods("POST")
+	router.HandleFunc("/signup", authHandlers.SignUp).Methods("POST")
+	router.HandleFunc("/check-user", authHandlers.CheckUser).Methods("POST")
+	router.HandleFunc("/set-new-password", authHandlers.SetNewPassword).Methods("POST")
+	router.HandleFunc("/login", authHandlers.Login).Methods("POST")
 
 	// Protected routes: requires JWT authentication
 	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
 
-	// You can add more routes here, for example:
-	// router.HandleFunc("/profile", auth_handlers.Profile).Methods("GET")
+	// Additional routes can be added here
+	// router.HandleFunc("/profile", authHandlers.Profile).Methods("GET")
 
 	return router
 }

@@ -2,8 +2,8 @@ package auth_handlers_test
 
 import (
 	"bytes"
-	"erp/db"
-	auth_handlers "erp/handlers/Auth"
+	"database/sql"
+	"erp/handlers/auth_handlers"
 	"erp/middleware"
 	"erp/utils"
 	"net/http"
@@ -16,32 +16,44 @@ import (
 	"github.com/stretchr/testify/assert"
 )
 
+func setupAuthHandlers(mockDB *sql.DB) *auth_handlers.AuthHandlers {
+	// Initialize the UserStore with the mock DB
+	userStore := &auth_handlers.DBUserStore{DB: mockDB}
+	// Initialize AuthHandlers
+	return &auth_handlers.AuthHandlers{UserStore: userStore}
+}
+
 func TestSignUp(t *testing.T) {
 	// Create a mock database
 	mockDB, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("Failed to open sqlmock: %s", err)
 	}
-	defer mockDB.Close() // Close the database connection after the test completes
-	db.DB = mockDB
+	defer mockDB.Close()
 
-	// Mock the query for checking if the user already exists
-	mock.ExpectQuery("SELECT email FROM users WHERE email=\\$1").
+	// Set up AuthHandlers
+	authHandlers := setupAuthHandlers(mockDB)
+
+	// Mock the query for checking if the user already exists (user does not exist)
+	mock.ExpectQuery("SELECT email, password FROM users WHERE email=\\$1").
 		WithArgs("test@example.com").
-		WillReturnRows(sqlmock.NewRows([]string{"email"}))
+		WillReturnRows(sqlmock.NewRows([]string{})) // Simulate no user found
 
 	// Mock the insert query
 	mock.ExpectExec("INSERT INTO users").WithArgs("test@example.com", "role", "department").
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WillReturnResult(sqlmock.NewResult(1, 1)) // Simulate successful insertion
 
 	// Prepare the request body
 	reqBody := `{"email":"test@example.com", "role":"role", "department":"department"}`
 	req := httptest.NewRequest("POST", "/signup", bytes.NewBufferString(reqBody))
 	req.Header.Set("Content-Type", "application/json")
-	rr := httptest.NewRecorder() 
+	rr := httptest.NewRecorder()
 
 	// Call the handler
-	auth_handlers.SignUp(rr, req)
+	authHandlers.SignUp(rr, req)
+
+	// Log the response for debugging
+	t.Logf("Response: %v", rr.Body.String())
 
 	// Assert the response status code
 	assert.Equal(t, http.StatusCreated, rr.Code, "Expected response code to be 201 Created")
@@ -58,13 +70,15 @@ func TestLogin(t *testing.T) {
 		t.Fatalf("Failed to open sqlmock: %s", err)
 	}
 	defer mockDB.Close()
-	db.DB = mockDB
+
+	// Set up AuthHandlers
+	authHandlers := setupAuthHandlers(mockDB)
 
 	// Mock the query for retrieving the hashed password
 	hashedPassword, _ := bcrypt.GenerateFromPassword([]byte("password123"), bcrypt.DefaultCost)
-	mock.ExpectQuery("SELECT password FROM users WHERE email=\\$1").
+	mock.ExpectQuery("SELECT email, password FROM users WHERE email=\\$1").
 		WithArgs("test@example.com").
-		WillReturnRows(sqlmock.NewRows([]string{"password"}).AddRow(hashedPassword))
+		WillReturnRows(sqlmock.NewRows([]string{"email", "password"}).AddRow("test@example.com", hashedPassword))
 
 	// Prepare the request body
 	reqBody := `{"email":"test@example.com", "password":"password123"}`
@@ -73,7 +87,7 @@ func TestLogin(t *testing.T) {
 	rr := httptest.NewRecorder()
 
 	// Call the handler
-	auth_handlers.Login(rr, req)
+	authHandlers.Login(rr, req)
 
 	// Assert the response status code
 	assert.Equal(t, http.StatusOK, rr.Code, "Expected response code to be 200 OK")
