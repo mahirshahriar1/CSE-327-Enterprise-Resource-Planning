@@ -1,7 +1,8 @@
 package routes
 
 import (
-	"erp/handlers"
+	auth_handlers "erp/handlers/Auth"
+	dashboard "erp/handlers/Dashboard"
 	"erp/middleware"
 	"net/http"
 
@@ -13,16 +14,16 @@ func InitRoutes() *mux.Router {
 	router := mux.NewRouter()
 
 	// Public routes (no authentication required)
-	router.HandleFunc("/signup", handlers.SignUp).Methods("POST")
-	router.HandleFunc("/check-user", handlers.CheckUser).Methods("POST")
-	router.HandleFunc("/set-new-password", handlers.SetNewPassword).Methods("POST")
-	router.HandleFunc("/login", handlers.Login).Methods("POST")
+	router.HandleFunc("/signup", auth_handlers.SignUp).Methods("POST")
+	router.HandleFunc("/check-user", auth_handlers.CheckUser).Methods("POST")
+	router.HandleFunc("/set-new-password", auth_handlers.SetNewPassword).Methods("POST")
+	router.HandleFunc("/login", auth_handlers.Login).Methods("POST")
 
 	// Protected routes: requires JWT authentication
-	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(handlers.Dashboard))).Methods("GET")
+	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
 
 	// You can add more routes here, for example:
-	// router.HandleFunc("/profile", handlers.Profile).Methods("GET")
+	// router.HandleFunc("/profile", auth_handlers.Profile).Methods("GET")
 
 	return router
 }
