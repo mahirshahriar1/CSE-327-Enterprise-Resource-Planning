@@ -1,4 +1,6 @@
-package handlers
+// Description: This file contains the handlers for user authentication, including sign-up, login, and password management.
+
+package auth_handlers
 
 import (
 	"database/sql"
@@ -11,22 +13,27 @@ import (
 	"golang.org/x/crypto/bcrypt"
 )
 
+// User represents a user in the system
 type User struct {
 	Email        string `json:"email"`
 	Password     string `json:"password,omitempty"`
 	NeedsNewPass bool   `json:"needsNewPass,omitempty"`
 }
+
+// SignUpRequest represents the request structure for user sign-up
 type SignUpRequest struct {
 	Email      string `json:"email"`
 	Role       string `json:"role"`
 	Department string `json:"department"`
 }
 
+// SetNewPasswordRequest represents the request structure for setting a new password
 type SetNewPasswordRequest struct {
 	Email       string `json:"email"`
 	NewPassword string `json:"new_password"`
 }
 
+// SignUp handles the user registration process
 func SignUp(w http.ResponseWriter, r *http.Request) {
 	var req SignUpRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -58,7 +65,7 @@ func SignUp(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte("User created successfully"))
 }
 
-// Check if user needs to set a new password
+// CheckUser verifies if a user needs to set a new password
 func CheckUser(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
@@ -90,12 +97,7 @@ func CheckUser(w http.ResponseWriter, r *http.Request) {
 	json.NewEncoder(w).Encode(user)
 }
 
-// {
-//     "email": "user@example.com",
-//     "new_password": "NewPassword123"
-// }
-
-// Set a new password for first time login
+// SetNewPassword handles setting a new password for first-time login
 func SetNewPassword(w http.ResponseWriter, r *http.Request) {
 	var req SetNewPasswordRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
@@ -148,7 +150,7 @@ func SetNewPassword(w http.ResponseWriter, r *http.Request) {
 	log.Println("Password set successfully for user:", req.Email)
 }
 
-// Handle login for existing users
+// Login handles the authentication process for existing users
 func Login(w http.ResponseWriter, r *http.Request) {
 	var user User
 	err := json.NewDecoder(r.Body).Decode(&user)
