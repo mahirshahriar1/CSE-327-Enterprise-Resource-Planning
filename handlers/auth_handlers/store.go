@@ -2,7 +2,7 @@ package auth_handlers
 
 import (
 	"database/sql"
-	"erp/types"
+	"erp/models"
 	"errors"
 )
 
@@ -18,8 +18,8 @@ func (s *DBUserStore) CreateUser(email, role, department string) error {
 }
 
 // GetUserByEmail fetches a user by email
-func (s *DBUserStore) GetUserByEmail(email string) (*types.User, error) {
-	var user types.User
+func (s *DBUserStore) GetUserByEmail(email string) (*models.User, error) {
+	var user models.User
 	var existingPassword sql.NullString
 	err := s.DB.QueryRow("SELECT email, password FROM users WHERE email=$1", email).Scan(&user.Email, &existingPassword)
 	if err == sql.ErrNoRows {
@@ -28,7 +28,7 @@ func (s *DBUserStore) GetUserByEmail(email string) (*types.User, error) {
 		return nil, err
 	}
 	user.Password = existingPassword.String
-	// If the password is NULL in the database, set NeedsNewPass to true
+	// If the password is NULL in the database, set NeedsNewPass to true or false
 	user.NeedsNewPass = !existingPassword.Valid || existingPassword.String == ""
 	return &user, nil
 }

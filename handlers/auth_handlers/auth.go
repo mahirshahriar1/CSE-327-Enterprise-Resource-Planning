@@ -2,7 +2,7 @@ package auth_handlers
 
 import (
 	"encoding/json"
-	"erp/types"
+	"erp/models"
 	"erp/utils"
 	"log"
 	"net/http"
@@ -12,12 +12,12 @@ import (
 
 // AuthHandlers struct contains the user store dependency
 type AuthHandlers struct {
-	UserStore types.UserStore
+	UserStore models.UserStore
 }
 
 // SignUp handles the user registration process
 func (h *AuthHandlers) SignUp(w http.ResponseWriter, r *http.Request) {
-	var req types.SignUpRequest
+	var req models.SignUpRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -49,7 +49,7 @@ func (h *AuthHandlers) SignUp(w http.ResponseWriter, r *http.Request) {
 
 // CheckUser verifies if a user needs to set a new password
 func (h *AuthHandlers) CheckUser(w http.ResponseWriter, r *http.Request) {
-	var user types.User
+	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
@@ -62,15 +62,19 @@ func (h *AuthHandlers) CheckUser(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User not found", http.StatusNotFound)
 		return
 	}
-
 	// Respond with the user's status
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(existingUser)
+
+	if !existingUser.NeedsNewPass {
+		json.NewEncoder(w).Encode(map[string]bool{"needsNewPass": false})
+		return
+	}
+	json.NewEncoder(w).Encode(map[string]bool{"needsNewPass": true})
 }
 
 // SetNewPassword handles setting a new password for first-time login
 func (h *AuthHandlers) SetNewPassword(w http.ResponseWriter, r *http.Request) {
-	var req types.SetNewPasswordRequest
+	var req models.SetNewPasswordRequest
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
@@ -116,7 +120,7 @@ func (h *AuthHandlers) SetNewPassword(w http.ResponseWriter, r *http.Request) {
 
 // Login handles the authentication process for existing users
 func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
-	var user types.User
+	var user models.User
 	err := json.NewDecoder(r.Body).Decode(&user)
 	if err != nil || user.Password == "" {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
