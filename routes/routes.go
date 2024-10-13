@@ -18,11 +18,14 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	userStore := &auth_handlers.DBUserStore{DB: db}
 	authHandlers := &auth_handlers.AuthHandlers{UserStore: userStore}
 
-	// Public routes (no authentication required)
-	router.HandleFunc("/signup", authHandlers.SignUp).Methods("POST")
-	router.HandleFunc("/check-user", authHandlers.CheckUser).Methods("POST")
-	router.HandleFunc("/set-new-password", authHandlers.SetNewPassword).Methods("POST")
-	router.HandleFunc("/login", authHandlers.Login).Methods("POST")
+	// Create a subrouter for auth routes
+	authRouter := router.PathPrefix("/auth").Subrouter()
+
+	// Auth routes
+	authRouter.HandleFunc("/signup", authHandlers.SignUp).Methods("POST")
+	authRouter.HandleFunc("/check-user", authHandlers.CheckUser).Methods("POST")
+	authRouter.HandleFunc("/set-new-password", authHandlers.SetNewPassword).Methods("POST")
+	authRouter.HandleFunc("/login", authHandlers.Login).Methods("POST")
 
 	// Protected routes: requires JWT authentication
 	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
