@@ -34,6 +34,9 @@ func JWTAuth(next http.Handler) http.Handler {
 		// Log the token's email claim for debugging
 		log.Printf("Authenticated user with email: %v", claims["email"])
 
+		// Log the token's email claim for debugging
+		// log.Printf("Authenticated user with email: %v", claims["email"])
+
 		// Proceed with the request
 		next.ServeHTTP(w, r)
 	})

@@ -81,8 +81,6 @@ func (h *AuthHandlers) SetNewPassword(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	log.Printf("Setting new password for email: %s", req.Email)
-
 	// Check if the user exists and needs a new password
 	existingUser, err := h.UserStore.GetUserByEmail(req.Email)
 	if err != nil {
@@ -138,9 +136,6 @@ func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		http.Error(w, "User needs to set a new password", http.StatusUnauthorized)
 		return
 	}
-
-	// Log the hashed password from the database for debugging
-	log.Printf("Retrieved hashed password: %s", existingUser.Password)
 
 	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password))
 	if err != nil {
