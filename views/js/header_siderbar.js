@@ -1,5 +1,5 @@
 // Load the header and sidebar
-fetch("templates/header.txt")
+fetch("templates/header.xml")
   .then((response) => response.text())
   .then((data) => {
     const headerPlaceholder = document.getElementById("header-placeholder");
@@ -9,7 +9,7 @@ fetch("templates/header.txt")
     console.error("Error loading header:", error);
   });
 
-fetch("templates/sidebar.txt")
+fetch("templates/sidebar.xml")
   .then((response) => response.text())
   .then((data) => {
     const sidebarPlaceholder = document.getElementById("sidebar-placeholder");
