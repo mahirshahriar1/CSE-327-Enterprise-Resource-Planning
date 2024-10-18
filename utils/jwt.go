@@ -13,12 +13,12 @@ var jwtSecret = []byte("your-secret-key")
 func GenerateJWT(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
+		"exp":   time.Now().Add(time.Hour * 24).Unix(), //  Token expires in 24 hours
 	})
 	return token.SignedString(jwtSecret)
 }
 
-// ValidateJWT validates a JWT token and extracts the  claims 
+// ValidateJWT validates a JWT token and extracts the claims
 func ValidateJWT(tokenString string) (map[string]interface{}, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Verify token signing method etc.
