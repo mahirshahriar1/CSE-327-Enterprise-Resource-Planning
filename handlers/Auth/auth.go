@@ -1,5 +1,4 @@
 // Description: This file contains the handlers for user authentication, including sign-up, login, and password management.
-
 package auth_handlers
 
 import (

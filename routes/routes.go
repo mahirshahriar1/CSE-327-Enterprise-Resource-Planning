@@ -2,8 +2,8 @@ package routes
 
 import (
 	"database/sql"
-	dashboard "erp/handlers/Dashboard"
 	"erp/handlers/auth_handlers"
+	"erp/handlers/dashboard"
 	"erp/middleware"
 	"net/http"
 
@@ -20,12 +20,8 @@ func InitRoutes(db *sql.DB) *mux.Router {
 
 	// Create a subrouter for auth routes
 	authRouter := router.PathPrefix("/auth").Subrouter()
-
-	// Auth routes
-	authRouter.HandleFunc("/signup", authHandlers.SignUp).Methods("POST")
-	authRouter.HandleFunc("/check-user", authHandlers.CheckUser).Methods("POST")
-	authRouter.HandleFunc("/set-new-password", authHandlers.SetNewPassword).Methods("POST")
-	authRouter.HandleFunc("/login", authHandlers.Login).Methods("POST")
+	// Register auth routes
+	authHandlers.RegisterRoutes(authRouter)
 
 	// Protected routes: requires JWT authentication
 	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
