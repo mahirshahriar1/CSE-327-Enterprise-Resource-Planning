@@ -9,29 +9,29 @@ import (
 
 var jwtSecret = []byte("your-secret-key")
 
-// GenerateJWT generates a new JWT token for the given email
+// GenerateJWT generates a new JWT token with userID and email
 func GenerateJWT(email string) (string, error) {
 	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
 		"email": email,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(), //  Token expires in 24 hours
+		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
 	})
 	return token.SignedString(jwtSecret)
 }
 
 // ValidateJWT validates a JWT token and extracts the claims
-func ValidateJWT(tokenString string) (map[string]interface{}, error) {
+func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		// Verify token signing method etc.
-		return []byte("your-secret-key"), nil
+		return jwtSecret, nil
 	})
 
 	if err != nil || !token.Valid {
-		return nil, err // Return error if the token is invalid
+		return nil, err
 	}
 
 	// Extract and return the claims
 	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-		// log.Println("Claims:", claims)
+
 		return claims, nil
 	}
 

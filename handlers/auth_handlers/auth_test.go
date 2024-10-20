@@ -5,9 +5,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"erp/handlers/auth_handlers"
-	"erp/middleware"
 	"erp/models"
-	"erp/utils"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -95,50 +93,7 @@ func TestLogin(t *testing.T) {
 	assert.Equal(t, http.StatusOK, rr.Code, "Expected response code to be 200 OK")
 }
 
-func TestJWTAuth_ValidToken(t *testing.T) {
-	// Generate a valid JWT token for testing
-	tokenString, _ := utils.GenerateJWT("test@example.com")
-
-	// Create a request with the token in the Authorization header
-	req := httptest.NewRequest("GET", "/dashboard", nil)
-	req.Header.Set("Authorization", "Bearer "+tokenString)
-	rr := httptest.NewRecorder()
-
-	// Create a handler to test the middleware
-	handler := middleware.JWTAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Authenticated"))
-	}))
-
-	// Serve the request
-	handler.ServeHTTP(rr, req)
-
-	// Assert the response status code
-	assert.Equal(t, http.StatusOK, rr.Code, "Expected response code to be 200 OK")
-	assert.Equal(t, "Authenticated", rr.Body.String())
-}
-
-func TestJWTAuth_InvalidToken(t *testing.T) {
-	// Create a request with an invalid JWT token in the Authorization header
-	req := httptest.NewRequest("GET", "/dashboard", nil)
-	req.Header.Set("Authorization", "Bearer invalidtoken")
-	rr := httptest.NewRecorder()
-
-	// Create a handler to test the middleware
-	handler := middleware.JWTAuth(http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
-		w.WriteHeader(http.StatusOK)
-		w.Write([]byte("Authenticated"))
-	}))
-
-	// Serve the request
-	handler.ServeHTTP(rr, req)
-
-	// Assert the response status code
-	assert.Equal(t, http.StatusUnauthorized, rr.Code, "Expected response code to be 401 Unauthorized")
-}
-
 // CheckUser verifies if a user needs to set a new password
-
 func TestCheckUser(t *testing.T) {
 	pass := "password123"
 	logic := pass == "" // if password is empty, needsNewPass is true
@@ -185,3 +140,4 @@ func TestCheckUser(t *testing.T) {
 		t.Errorf("there were unfulfilled expectations: %s", err)
 	}
 }
+

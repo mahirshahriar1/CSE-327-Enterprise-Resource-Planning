@@ -1,3 +1,4 @@
+// Description: This file contains the handlers for the authentication endpoints.
 package auth_handlers
 
 import (
@@ -7,12 +8,20 @@ import (
 	"log"
 	"net/http"
 
+	"github.com/gorilla/mux"
 	"golang.org/x/crypto/bcrypt"
 )
 
 // AuthHandlers struct contains the user store dependency
 type AuthHandlers struct {
 	UserStore models.UserStore
+}
+
+func (h *AuthHandlers) RegisterRoutes(router *mux.Router){
+	router.HandleFunc("/signup", h.SignUp).Methods("POST")
+	router.HandleFunc("/check-user" , h.CheckUser).Methods("POST")
+	router.HandleFunc("/set-new-password", h.SetNewPassword).Methods("POST")
+	router.HandleFunc("/login", h.Login).Methods("POST")
 }
 
 // SignUp handles the user registration process
