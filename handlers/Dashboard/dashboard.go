@@ -1,3 +1,4 @@
+// This file contains the handler for the dashboard endpoint
 package dashboard
 
 import (
