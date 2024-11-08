@@ -3,9 +3,6 @@ package routes
 import (
 	"database/sql"
 	"erp/handlers/auth_handlers"
-	"erp/handlers/dashboard"
-	"erp/middleware"
-	"net/http"
 
 	"github.com/gorilla/mux"
 )
@@ -14,8 +11,15 @@ import (
 func InitRoutes(db *sql.DB) *mux.Router {
 	router := mux.NewRouter()
 
-	// Initialize UserStore and AuthHandlers
-	userStore := &auth_handlers.DBUserStore{DB: db}
+	// Initialize role store
+	roleStore := &auth_handlers.DBRoleStore{DB: db}
+
+	// Initialize user store with role store dependency
+	userStore := &auth_handlers.DBUserStore{
+		DB:        db,
+		RoleStore: roleStore,
+	}
+	// Initialize auth handlers
 	authHandlers := &auth_handlers.AuthHandlers{UserStore: userStore}
 
 	// Create a subrouter for auth routes
@@ -24,7 +28,7 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	authHandlers.RegisterRoutes(authRouter)
 
 	// Protected routes: requires JWT authentication
-	router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
+	// router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
 
 	// Additional routes can be added here
 	// router.HandleFunc("/profile", authHandlers.Profile).Methods("GET")

@@ -5,6 +5,9 @@ import (
 	"encoding/json"
 	"erp/models"
 	"erp/utils"
+	"errors"
+	"fmt"
+
 	"log"
 	"net/http"
 
@@ -17,9 +20,10 @@ type AuthHandlers struct {
 	UserStore models.UserStore
 }
 
-func (h *AuthHandlers) RegisterRoutes(router *mux.Router){
+// RegisterRoutes registers all the authentication routes
+func (h *AuthHandlers) RegisterRoutes(router *mux.Router) {
 	router.HandleFunc("/signup", h.SignUp).Methods("POST")
-	router.HandleFunc("/check-user" , h.CheckUser).Methods("POST")
+	router.HandleFunc("/check-user", h.CheckUser).Methods("POST")
 	router.HandleFunc("/set-new-password", h.SetNewPassword).Methods("POST")
 	router.HandleFunc("/login", h.Login).Methods("POST")
 }
@@ -38,15 +42,15 @@ func (h *AuthHandlers) SignUp(w http.ResponseWriter, r *http.Request) {
 	if err == nil {
 		http.Error(w, "User already exists", http.StatusConflict)
 		return
-	} else if err.Error() != "user not found" {
-		// return the error if it's not a "user not found" error not the http error
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		// http.Error(w, "Server error", http.StatusInternalServerError)
+	} else if !errors.Is(err, ErrUserNotFound) {
+		// Log the unexpected error and respond with "Server error"
+		fmt.Println("Error:", err)
+		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 
-	// Insert the new user (with a null password)
-	err = h.UserStore.CreateUser(req.Email, req.Role, req.Department)
+	// Insert the new user (with name, email, role, and department)
+	err = h.UserStore.CreateUser(req.Name, req.Email, req.Role, req.Department)
 	if err != nil {
 		http.Error(w, "Could not create user", http.StatusInternalServerError)
 		return
@@ -58,27 +62,27 @@ func (h *AuthHandlers) SignUp(w http.ResponseWriter, r *http.Request) {
 
 // CheckUser verifies if a user needs to set a new password
 func (h *AuthHandlers) CheckUser(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
+	var req models.User
+	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid request", http.StatusBadRequest)
 		return
 	}
 
 	// Check if the user exists
-	existingUser, err := h.UserStore.GetUserByEmail(user.Email)
+	existingUser, err := h.UserStore.GetUserByEmail(req.Email)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		if errors.Is(err, ErrUserNotFound) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
-	// Respond with the user's status
-	w.Header().Set("Content-Type", "application/json")
 
-	if !existingUser.NeedsNewPass {
-		json.NewEncoder(w).Encode(map[string]bool{"needsNewPass": false})
-		return
-	}
-	json.NewEncoder(w).Encode(map[string]bool{"needsNewPass": true})
+	// Respond with whether the user needs to set a new password
+	w.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(w).Encode(map[string]bool{"needsNewPass": existingUser.NeedsNewPass})
 }
 
 // SetNewPassword handles setting a new password for first-time login
@@ -127,18 +131,21 @@ func (h *AuthHandlers) SetNewPassword(w http.ResponseWriter, r *http.Request) {
 
 // Login handles the authentication process for existing users
 func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
-	var user models.User
-	err := json.NewDecoder(r.Body).Decode(&user)
-	if err != nil || user.Password == "" {
+	var credentials models.LoginCredentials
+	err := json.NewDecoder(r.Body).Decode(&credentials)
+	if err != nil || credentials.Password == "" {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	// Retrieve the user's hashed password
-	existingUser, err := h.UserStore.GetUserByEmail(user.Email)
-	// log.Println("Existing user:", existingUser)
+	// Retrieve the user's hashed password and check if the user exists
+	existingUser, err := h.UserStore.GetUserByEmail(credentials.Email)
 	if err != nil {
-		http.Error(w, "User not found", http.StatusNotFound)
+		if errors.Is(err, ErrUserNotFound) {
+			http.Error(w, "User not found", http.StatusNotFound)
+			return
+		}
+		http.Error(w, "Server error", http.StatusInternalServerError)
 		return
 	}
 	if existingUser.NeedsNewPass {
@@ -146,23 +153,25 @@ func (h *AuthHandlers) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(user.Password))
+	// Compare the provided password with the stored hashed password
+	err = bcrypt.CompareHashAndPassword([]byte(existingUser.Password), []byte(credentials.Password))
 	if err != nil {
 		http.Error(w, "Invalid password", http.StatusUnauthorized)
-		log.Println("Password comparison failed:", err)
 		return
 	}
 
 	// Generate JWT token
-	tokenString, err := utils.GenerateJWT(user.Email)
+	tokenString, err := utils.GenerateJWT(existingUser.Email, existingUser.Role.RoleName)
 	if err != nil {
 		http.Error(w, "Could not generate token", http.StatusInternalServerError)
 		return
 	}
 
-	// Return the generated token
+	// Return the generated token along with the user's name and role
 	w.Header().Set("Content-Type", "application/json")
-	json.NewEncoder(w).Encode(map[string]string{
+	json.NewEncoder(w).Encode(map[string]interface{}{
 		"token": tokenString,
+		"name":  existingUser.Name,
+		"role":  existingUser.Role.RoleName,
 	})
 }

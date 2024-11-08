@@ -2,38 +2,49 @@ package utils
 
 import (
 	"fmt"
-	"time"
+    "time"
 
-	"github.com/dgrijalva/jwt-go"
+    "github.com/dgrijalva/jwt-go"
 )
 
-var jwtSecret = []byte("your-secret-key")
+var jwtKey = []byte("your_secret_key")
 
-// GenerateJWT generates a new JWT token with userID and email
-func GenerateJWT(email string) (string, error) {
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, jwt.MapClaims{
-		"email": email,
-		"exp":   time.Now().Add(time.Hour * 24).Unix(), // Token expires in 24 hours
-	})
-	return token.SignedString(jwtSecret)
+// Claims defines the structure for JWT claims
+type Claims struct {
+    Email string `json:"email"`
+    Role  string `json:"role"`
+    jwt.StandardClaims
+}
+
+// GenerateJWT creates a new JWT for a user
+func GenerateJWT(email, role string) (string, error) {
+    expirationTime := time.Now().Add(24 * time.Hour)
+    claims := &Claims{
+        Email: email,
+        Role:  role,
+        StandardClaims: jwt.StandardClaims{
+            ExpiresAt: expirationTime.Unix(),
+        },
+    }
+    token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+    return token.SignedString(jwtKey)
 }
 
 // ValidateJWT validates a JWT token and extracts the claims
 func ValidateJWT(tokenString string) (jwt.MapClaims, error) {
 	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
-		// Verify token signing method etc.
-		return jwtSecret, nil
+		// Check the signing method
+		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
+		}
+		return jwtKey, nil
 	})
-
-	if err != nil || !token.Valid {
+	if err != nil {
 		return nil, err
 	}
 
-	// Extract and return the claims
-	if claims, ok := token.Claims.(jwt.MapClaims); ok {
-
+	if claims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
 		return claims, nil
 	}
-
-	return nil, fmt.Errorf("invalid token claims")
+	return nil, fmt.Errorf("invalid token")
 }
