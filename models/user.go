@@ -2,13 +2,13 @@ package models // or package types, based on your preference
 
 // User represents a user in the system
 type User struct {
-	ID           int    `json:"id,omitempty"` // Include ID if applicable
+	ID           int    `json:"id,omitempty"`
+	Name         string `json:"name,omitempty"`
 	Email        string `json:"email"`
-	Name         string `json:"name,omitempty"`     // Include if name is needed
-	Password     string `json:"password,omitempty"` // Omit when sending in response
-	Role         string `json:"role"`
+	Password     string `json:"password,omitempty"`
+	Role         Role   `json:"role"`
 	Department   string `json:"department"`
-	NeedsNewPass bool   `json:"needsNewPass,omitempty"` // Optional for tracking if the user needs to set a new password
+	NeedsNewPass bool   `json:"needsNewPass,omitempty"`
 }
 
 // LoginCredentials represents the structure for user login
@@ -19,6 +19,7 @@ type LoginCredentials struct {
 
 // SignUpRequest represents the request structure for user sign-up
 type SignUpRequest struct {
+	Name       string `json:"name"`
 	Email      string `json:"email"`
 	Role       string `json:"role"`
 	Department string `json:"department"`
@@ -32,7 +33,7 @@ type SetNewPasswordRequest struct {
 
 // UserStore defines an interface for user-related database operations
 type UserStore interface {
-	CreateUser(email, role, department string) error
+	CreateUser(name, email, role, department string) error
 	GetUserByEmail(email string) (*User, error)
 	UpdatePassword(email, hashedPassword string) error
 }
