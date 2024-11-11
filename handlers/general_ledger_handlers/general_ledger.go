@@ -1,3 +1,5 @@
+// Package general_ledger_handlers provides HTTP handlers to perform CRUD operations
+// on the general ledger within an ERP system.
 package general_ledger_handlers
 
 import (
@@ -12,24 +14,30 @@ import (
 	"github.com/gorilla/mux"
 )
 
-// GeneralLedgerHandler provides HTTP handlers for general ledger operations
+// GeneralLedgerHandler struct provides HTTP handlers for interacting with financial
+// transactions stored in the general ledger. It uses a FinancialTransactionStore
+// interface to perform data storage operations.
 type GeneralLedgerHandler struct {
 	Store models.FinancialTransactionStore
 }
 
-// RegisterRoutes maps general ledger routes to their respective handlers
-// This function is called during route initialization to keep route definitions modular and scalable.
+// RegisterRoutes maps general ledger routes to their respective handler functions.
+// It keeps route definitions modular, enabling easy modifications and scalability.
+// The routes are registered with the provided router and are bound to the specified store.
 func RegisterRoutes(router *mux.Router, store models.FinancialTransactionStore) {
 	handler := &GeneralLedgerHandler{Store: store}
 
-	router.HandleFunc("", handler.createTransaction).Methods("POST")
-	router.HandleFunc("/{id}", handler.getTransaction).Methods("GET")
-	router.HandleFunc("/{id}", handler.updateTransaction).Methods("PUT")
-	router.HandleFunc("/{id}", handler.deleteTransaction).Methods("DELETE")
+	router.HandleFunc("", handler.CreateTransaction).Methods("POST")
+	router.HandleFunc("/{id}", handler.GetTransaction).Methods("GET")
+	router.HandleFunc("/{id}", handler.UpdateTransaction).Methods("PUT")
+	router.HandleFunc("/{id}", handler.DeleteTransaction).Methods("DELETE")
 }
 
-// createTransaction handles the creation of a new financial transaction
-func (h *GeneralLedgerHandler) createTransaction(w http.ResponseWriter, r *http.Request) {
+// CreateTransaction is an HTTP handler that creates a new financial transaction
+// in the general ledger. It reads transaction data from the request body, assigns
+// the current time as the transaction date, and saves it to the database.
+// On success, it returns the created transaction in JSON format with a 201 status code.
+func (h *GeneralLedgerHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	var transaction models.FinancialTransaction
 	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
 		http.Error(w, "Invalid input data", http.StatusBadRequest)
@@ -48,8 +56,11 @@ func (h *GeneralLedgerHandler) createTransaction(w http.ResponseWriter, r *http.
 	}
 }
 
-// getTransaction retrieves a financial transaction by ID
-func (h *GeneralLedgerHandler) getTransaction(w http.ResponseWriter, r *http.Request) {
+// GetTransaction retrieves and returns a financial transaction by its ID.
+// The ID is parsed from the URL path, and the transaction data is fetched from the
+// database. If found, it returns the transaction in JSON format with a 200 status.
+// If not found or if the ID is invalid, it returns an appropriate error message.
+func (h *GeneralLedgerHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
@@ -67,8 +78,11 @@ func (h *GeneralLedgerHandler) getTransaction(w http.ResponseWriter, r *http.Req
 	}
 }
 
-// updateTransaction modifies an existing financial transaction
-func (h *GeneralLedgerHandler) updateTransaction(w http.ResponseWriter, r *http.Request) {
+// UpdateTransaction modifies an existing financial transaction based on the given ID.
+// It reads the updated transaction data from the request body, updates the record in the
+// database, and returns the updated transaction in JSON format with a 200 status.
+// If the ID is invalid or the update fails, it returns an error message.
+func (h *GeneralLedgerHandler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
@@ -93,8 +107,11 @@ func (h *GeneralLedgerHandler) updateTransaction(w http.ResponseWriter, r *http.
 	}
 }
 
-// deleteTransaction removes a financial transaction by ID
-func (h *GeneralLedgerHandler) deleteTransaction(w http.ResponseWriter, r *http.Request) {
+// DeleteTransaction removes a financial transaction identified by its ID.
+// The ID is extracted from the URL path, and the transaction is deleted from the database.
+// On successful deletion, it returns a 204 status with no content. If the ID is invalid
+// or deletion fails, it returns an appropriate error message.
+func (h *GeneralLedgerHandler) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
 		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
