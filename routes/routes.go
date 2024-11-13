@@ -2,6 +2,7 @@ package routes
 
 import (
 	"database/sql"
+	"erp/handlers/accounts_payable_handlers"
 	"erp/handlers/auth_handlers"
 	"erp/handlers/general_ledger_handlers"
 
@@ -27,6 +28,11 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	generalLedgerStore := &general_ledger_handlers.DBFinancialTransactionStore{DB: db}
 	generalLedgerRouter := router.PathPrefix("/general_ledger").Subrouter()
 	general_ledger_handlers.RegisterRoutes(generalLedgerRouter, generalLedgerStore)
+
+	// Initialize accounts payable handlers and routes
+	accountsPayableStore := &accounts_payable_handlers.DBPaymentStore{DB: db} // PaymentStore implementation
+	accountsPayableRouter := router.PathPrefix("/accounts_payable").Subrouter()
+	accounts_payable_handlers.RegisterRoutes(accountsPayableRouter, accountsPayableStore, generalLedgerStore)
 
 	return router
 }
