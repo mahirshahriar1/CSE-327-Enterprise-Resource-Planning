@@ -1,3 +1,5 @@
+// Package leave_handlers provides HTTP handlers for managing leave requests.
+// It includes handlers for creating new leave requests and updating their status.
 package leave_handlers
 
 import (
@@ -7,23 +9,29 @@ import (
 	"net/http"
 )
 
-// LeaveStore interface for database operations.
+// LeaveStore defines the interface for database operations related to leave requests.
 // It provides methods for creating leave requests and updating their status.
 type LeaveStore interface {
 	// CreateLeave inserts a new leave request into the database.
-	// The `leave` parameter holds the details of the leave request.
+	// Parameters:
+	//   - leave: A pointer to the Leave object containing the details of the leave request.
+	// Returns:
+	//   - error: An error if the insertion fails, otherwise nil.
 	CreateLeave(leave *models.Leave) error
+
 	// UpdateLeaveStatus updates the status of an existing leave request.
-	// The `id` parameter specifies the unique identifier of the leave.
-	// The `status` parameter indicates the new status of the leave request (e.g., "Approved", "Rejected").
+	// Parameters:
+	//   - id: The unique identifier of the leave request.
+	//   - status: A string representing the new status (e.g., "Approved", "Rejected").
+	// Returns:
+	//   - error: An error if the update fails, otherwise nil.
 	UpdateLeaveStatus(id int, status string) error
 }
 
-// CreateLeaveHandler returns an HTTP handler function that handles the creation of a new leave request.
-// It expects a JSON payload with the details of the leave request, including user ID, leave type, start date, and end date.
-// The status of the new leave request is automatically set to "Pending".
+// CreateLeaveHandler creates a new leave request in the system.
+// It returns an HTTP handler function to process the creation of leave requests.
 //
-// Example JSON request body:
+// The handler expects a JSON payload with the following structure:
 //
 //	{
 //	  "user_id": 1,
@@ -32,8 +40,16 @@ type LeaveStore interface {
 //	  "end_date": "2024-11-25"
 //	}
 //
-// On success, the function returns an HTTP status code of 201 (Created) and the leave request details in JSON format.
-// If the request payload is invalid or there is an error in creating the leave request, the function returns an appropriate HTTP error status.
+// Details:
+//   - The status of the new leave request is automatically set to "Pending".
+//   - On success, it responds with HTTP 201 (Created) and the leave request details in JSON format.
+//   - On failure, it responds with an appropriate HTTP error status.
+//
+// Parameters:
+//   - store: An implementation of the LeaveStore interface to handle database operations.
+//
+// Returns:
+//   - http.HandlerFunc: The HTTP handler function for creating leave requests.
 func CreateLeaveHandler(store LeaveStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
 		var leave models.Leave
@@ -59,21 +75,27 @@ func CreateLeaveHandler(store LeaveStore) http.HandlerFunc {
 	}
 }
 
-// UpdateLeaveStatusHandler returns an HTTP handler function that handles updating the status of a leave request.
-// It expects a JSON payload with the leave ID and the new status.
+// UpdateLeaveStatusHandler updates the status of an existing leave request.
+// It returns an HTTP handler function to process status updates for leave requests.
 //
-// Example JSON request body:
+// The handler expects a JSON payload with the following structure:
 //
 //	{
 //	  "id": 1,
 //	  "status": "Approved"
 //	}
 //
-// On success, the function returns an HTTP status code of 200 (OK) and a success message.
-// If the request payload is invalid or there is an error in updating the leave status, the function returns an appropriate HTTP error status.
+// Details:
+//   - On success, it responds with HTTP 200 (OK) and a success message.
+//   - On failure, it responds with an appropriate HTTP error status.
+//
+// Parameters:
+//   - store: An implementation of the LeaveStore interface to handle database operations.
+//
+// Returns:
+//   - http.HandlerFunc: The HTTP handler function for updating leave request statuses.
 func UpdateLeaveStatusHandler(store LeaveStore) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-
 		// Extract the leave ID and status from the request.
 		var requestData struct {
 			ID     int    `json:"id"`
