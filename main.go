@@ -1,7 +1,7 @@
 package main
 
 import (
-	"erp/db"
+	"erp/models/db"
 	"erp/routes"
 	"log"
 	"net/http"
