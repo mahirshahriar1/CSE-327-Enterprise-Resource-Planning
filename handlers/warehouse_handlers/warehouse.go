@@ -15,48 +15,73 @@ type WarehouseHandlers struct {
 	WarehouseStore models.WarehouseStore
 }
 
-// RegisterRoutes registers all the warehouse routes for the HTTP server.
+// RegisterRoutes registers all the warehouse-related routes for the HTTP server.
+//
+// This method sets up routes for creating, retrieving, updating, and deleting warehouses.
+// It takes a router object from the mux package for route registration.
+//
+// URL Paths:
+// - POST /warehouses: Create a new warehouse
+// - GET /warehouses/{id}: Retrieve a warehouse by ID
+// - PUT /warehouses/{id}: Update an existing warehouse by ID
+// - DELETE /warehouses/{id}: Delete a warehouse by ID
 func (h *WarehouseHandlers) RegisterRoutes(router *mux.Router) {
-	// Register route for creating a new warehouse
 	router.HandleFunc("/warehouses", h.CreateWarehouse).Methods("POST")
-
-	// Register route for fetching a warehouse by ID
 	router.HandleFunc("/warehouses/{id:[0-9]+}", h.GetWarehouseByID).Methods("GET")
-
-	// Register route for updating an existing warehouse
 	router.HandleFunc("/warehouses/{id:[0-9]+}", h.UpdateWarehouse).Methods("PUT")
-
-	// Register route for deleting a warehouse by ID
 	router.HandleFunc("/warehouses/{id:[0-9]+}", h.DeleteWarehouse).Methods("DELETE")
 }
 
 // CreateWarehouse handles the creation of a new warehouse.
-// It decodes the request body into a Warehouse struct and stores it in the database.
+//
+// This handler reads the incoming request body, decodes it into a Warehouse struct,
+// and attempts to store it in the database. On successful creation, it returns
+// a status code 201 Created. If an error occurs, it responds with an appropriate
+// status code and error message.
+//
+// HTTP Method: POST
+// URL Path: /warehouses
+//
+// Request Body:
+// - JSON representation of a Warehouse object.
+//
+// Response:
+// - Status Code: 201 (Created) if the warehouse is successfully created.
+// - Status Code: 400 (Bad Request) if the request body is invalid.
+// - Status Code: 500 (Internal Server Error) if the creation fails.
 func (h *WarehouseHandlers) CreateWarehouse(w http.ResponseWriter, r *http.Request) {
 	var req models.Warehouse
-	// Decode the JSON body into the Warehouse struct
 	err := json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	// Attempt to create the warehouse in the database
 	err = h.WarehouseStore.CreateWarehouse(&req)
 	if err != nil {
 		http.Error(w, "Could not create warehouse", http.StatusInternalServerError)
 		return
 	}
 
-	// Return success response
 	w.WriteHeader(http.StatusCreated)
 	w.Write([]byte("Warehouse created successfully"))
 }
 
 // GetWarehouseByID handles retrieving a warehouse by its ID.
-// It returns the warehouse details in JSON format if found, or an error if not.
+//
+// This handler extracts the warehouse ID from the URL path, retrieves the warehouse
+// from the database, and responds with the warehouse details in JSON format if found.
+// If the warehouse is not found or an error occurs, it responds with an appropriate
+// status code and error message.
+//
+// HTTP Method: GET
+// URL Path: /warehouses/{id}
+//
+// Response:
+// - Status Code: 200 (OK) and the warehouse details in JSON if the warehouse is found.
+// - Status Code: 400 (Bad Request) if the ID is invalid.
+// - Status Code: 404 (Not Found) if the warehouse is not found.
 func (h *WarehouseHandlers) GetWarehouseByID(w http.ResponseWriter, r *http.Request) {
-	// Extract warehouse ID from the URL parameters
 	params := mux.Vars(r)
 	warehouseID, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -64,22 +89,34 @@ func (h *WarehouseHandlers) GetWarehouseByID(w http.ResponseWriter, r *http.Requ
 		return
 	}
 
-	// Retrieve the warehouse from the database
 	warehouse, err := h.WarehouseStore.GetWarehouseByID(warehouseID)
 	if err != nil {
 		http.Error(w, "Warehouse not found", http.StatusNotFound)
 		return
 	}
 
-	// Respond with the warehouse in JSON format
 	w.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(w).Encode(warehouse)
 }
 
 // UpdateWarehouse handles updating an existing warehouse by ID.
-// It decodes the request body, updates the warehouse in the database, and returns a success response.
+//
+// This handler extracts the warehouse ID from the URL path, decodes the request body
+// into a Warehouse struct, updates the warehouse in the database, and returns a success
+// response. If an error occurs, it responds with an appropriate status code and error
+// message.
+//
+// HTTP Method: PUT
+// URL Path: /warehouses/{id}
+//
+// Request Body:
+// - JSON representation of a Warehouse object to update.
+//
+// Response:
+// - Status Code: 200 (OK) if the warehouse is successfully updated.
+// - Status Code: 400 (Bad Request) if the request body or ID is invalid.
+// - Status Code: 500 (Internal Server Error) if the update fails.
 func (h *WarehouseHandlers) UpdateWarehouse(w http.ResponseWriter, r *http.Request) {
-	// Extract warehouse ID from the URL parameters
 	params := mux.Vars(r)
 	warehouseID, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -88,32 +125,37 @@ func (h *WarehouseHandlers) UpdateWarehouse(w http.ResponseWriter, r *http.Reque
 	}
 
 	var req models.Warehouse
-	// Decode the request body into the Warehouse struct
 	err = json.NewDecoder(r.Body).Decode(&req)
 	if err != nil {
 		http.Error(w, "Invalid input", http.StatusBadRequest)
 		return
 	}
 
-	// Set the warehouse ID for the update operation
 	req.ID = warehouseID
-
-	// Attempt to update the warehouse in the database
 	err = h.WarehouseStore.UpdateWarehouse(&req)
 	if err != nil {
 		http.Error(w, "Could not update warehouse", http.StatusInternalServerError)
 		return
 	}
 
-	// Return success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Warehouse updated successfully"))
 }
 
-// DeleteWarehouse handles deleting a warehouse by ID.
-// It deletes the warehouse from the database and returns a success message.
+// DeleteWarehouse handles deleting a warehouse by its ID.
+//
+// This handler extracts the warehouse ID from the URL path, deletes the warehouse
+// from the database, and returns a success message. If any error occurs, it
+// responds with an appropriate status code and error message.
+//
+// HTTP Method: DELETE
+// URL Path: /warehouses/{id}
+//
+// Response:
+// - Status Code: 200 (OK) if the warehouse is successfully deleted.
+// - Status Code: 400 (Bad Request) if the ID is invalid.
+// - Status Code: 500 (Internal Server Error) if the deletion fails.
 func (h *WarehouseHandlers) DeleteWarehouse(w http.ResponseWriter, r *http.Request) {
-	// Extract warehouse ID from the URL parameters
 	params := mux.Vars(r)
 	warehouseID, err := strconv.Atoi(params["id"])
 	if err != nil {
@@ -121,14 +163,12 @@ func (h *WarehouseHandlers) DeleteWarehouse(w http.ResponseWriter, r *http.Reque
 		return
 	}
 
-	// Attempt to delete the warehouse from the database
 	err = h.WarehouseStore.DeleteWarehouse(warehouseID)
 	if err != nil {
 		http.Error(w, "Could not delete warehouse", http.StatusInternalServerError)
 		return
 	}
 
-	// Return success response
 	w.WriteHeader(http.StatusOK)
 	w.Write([]byte("Warehouse deleted successfully"))
 }
