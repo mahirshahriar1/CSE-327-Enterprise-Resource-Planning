@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"erp/handlers/accounts_payable_handlers"
 	"erp/handlers/auth_handlers"
+	"erp/handlers/customer_data_management_handlers" // Import customer handlers package
 	"erp/handlers/general_ledger_handlers"
 
 	"github.com/gorilla/mux"
@@ -24,6 +25,21 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	authRouter := router.PathPrefix("/auth").Subrouter()
 	authHandlers.RegisterRoutes(authRouter)
 
+	// Customer-related routes
+	customerStore := &customer_data_management_handlers.DBStore{DB: db} // Assuming your customer store is in this package
+	customerHandlers := &customer_data_management_handlers.CustomerHandlers{Store: customerStore}
+
+	// Create a subrouter for customer routes
+	customerRouter := router.PathPrefix("/customers").Subrouter()
+
+	// Register customer routes
+	customerRouter.HandleFunc("", customerHandlers.CreateCustomerHandler).Methods("POST")  // Create customer
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.GetCustomerByIDHandler).Methods("GET")  // Get customer by ID
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.UpdateCustomerHandler).Methods("PUT") // Update customer
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.DeleteCustomerHandler).Methods("DELETE") // Delete customer
+
+	// Protected routes: requires JWT authentication (example)
+	// router.Handle("/dashboard", middleware.JWTAuth(http.HandlerFunc(dashboard.Dashboard))).Methods("GET")
 	// Initialize general ledger handlers and routes
 	generalLedgerStore := &general_ledger_handlers.DBFinancialTransactionStore{DB: db}
 	generalLedgerRouter := router.PathPrefix("/general_ledger").Subrouter()
