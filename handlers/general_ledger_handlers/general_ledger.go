@@ -1,5 +1,6 @@
 // Package general_ledger_handlers provides HTTP handlers to perform CRUD operations
-// on the general ledger within an ERP system.
+// on the general ledger within an ERP system. It defines routes for managing financial transactions
+// stored in the general ledger and interacts with a database through the FinancialTransactionStore interface.
 package general_ledger_handlers
 
 import (
@@ -18,12 +19,15 @@ import (
 // transactions stored in the general ledger. It uses a FinancialTransactionStore
 // interface to perform data storage operations.
 type GeneralLedgerHandler struct {
-	Store models.FinancialTransactionStore
+	Store models.FinancialTransactionStore // Store defines the interface for managing transactions in the database.
 }
 
 // RegisterRoutes maps general ledger routes to their respective handler functions.
 // It keeps route definitions modular, enabling easy modifications and scalability.
-// The routes are registered with the provided router and are bound to the specified store.
+//
+// Parameters:
+//   - router: The HTTP router (from the Gorilla Mux library) where the routes are registered.
+//   - store: An implementation of the FinancialTransactionStore interface for managing transaction data.
 func RegisterRoutes(router *mux.Router, store models.FinancialTransactionStore) {
 	handler := &GeneralLedgerHandler{Store: store}
 
@@ -36,7 +40,18 @@ func RegisterRoutes(router *mux.Router, store models.FinancialTransactionStore) 
 // CreateTransaction is an HTTP handler that creates a new financial transaction
 // in the general ledger. It reads transaction data from the request body, assigns
 // the current time as the transaction date, and saves it to the database.
-// On success, it returns the created transaction in JSON format with a 201 status code.
+//
+// HTTP Method: POST
+// URL Path: / (root path of general ledger routes)
+//
+// Request Body:
+//   - JSON representation of a FinancialTransaction object (excluding the transaction date).
+//
+// Response:
+//   - Status Code: 201 (Created) if the transaction is successfully created.
+//   - JSON representation of the created transaction on success.
+//   - Status Code: 400 (Bad Request) if the input data is invalid.
+//   - Status Code: 500 (Internal Server Error) if the transaction could not be saved.
 func (h *GeneralLedgerHandler) CreateTransaction(w http.ResponseWriter, r *http.Request) {
 	var transaction models.FinancialTransaction
 	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
@@ -58,8 +73,15 @@ func (h *GeneralLedgerHandler) CreateTransaction(w http.ResponseWriter, r *http.
 
 // GetTransaction retrieves and returns a financial transaction by its ID.
 // The ID is parsed from the URL path, and the transaction data is fetched from the
-// database. If found, it returns the transaction in JSON format with a 200 status.
-// If not found or if the ID is invalid, it returns an appropriate error message.
+// database.
+//
+// HTTP Method: GET
+// URL Path: /{id} (ID of the transaction in the path)
+//
+// Response:
+//   - Status Code: 200 (OK) with the transaction data in JSON format if found.
+//   - Status Code: 400 (Bad Request) if the ID is invalid.
+//   - Status Code: 404 (Not Found) if the transaction with the specified ID does not exist.
 func (h *GeneralLedgerHandler) GetTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
@@ -80,8 +102,18 @@ func (h *GeneralLedgerHandler) GetTransaction(w http.ResponseWriter, r *http.Req
 
 // UpdateTransaction modifies an existing financial transaction based on the given ID.
 // It reads the updated transaction data from the request body, updates the record in the
-// database, and returns the updated transaction in JSON format with a 200 status.
-// If the ID is invalid or the update fails, it returns an error message.
+// database, and returns the updated transaction in JSON format.
+//
+// HTTP Method: PUT
+// URL Path: /{id} (ID of the transaction in the path)
+//
+// Request Body:
+//   - JSON representation of a FinancialTransaction object (excluding the ID, which is taken from the URL).
+//
+// Response:
+//   - Status Code: 200 (OK) with the updated transaction data in JSON format if successful.
+//   - Status Code: 400 (Bad Request) if the ID or input data is invalid.
+//   - Status Code: 500 (Internal Server Error) if the update operation fails.
 func (h *GeneralLedgerHandler) UpdateTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
@@ -109,8 +141,14 @@ func (h *GeneralLedgerHandler) UpdateTransaction(w http.ResponseWriter, r *http.
 
 // DeleteTransaction removes a financial transaction identified by its ID.
 // The ID is extracted from the URL path, and the transaction is deleted from the database.
-// On successful deletion, it returns a 204 status with no content. If the ID is invalid
-// or deletion fails, it returns an appropriate error message.
+//
+// HTTP Method: DELETE
+// URL Path: /{id} (ID of the transaction in the path)
+//
+// Response:
+//   - Status Code: 204 (No Content) if the transaction is successfully deleted.
+//   - Status Code: 400 (Bad Request) if the ID is invalid.
+//   - Status Code: 500 (Internal Server Error) if the deletion operation fails.
 func (h *GeneralLedgerHandler) DeleteTransaction(w http.ResponseWriter, r *http.Request) {
 	id, err := strconv.Atoi(mux.Vars(r)["id"])
 	if err != nil {
