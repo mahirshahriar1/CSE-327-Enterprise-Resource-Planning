@@ -1,0 +1,104 @@
+{
+    "info": {
+      "name": "General Ledger API",
+      "description": "Collection for testing General Ledger API endpoints",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Create Transaction",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"account_type\": \"expense\",\n    \"amount\": 250.00\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/general_ledger",
+            "host": ["{{baseURL}}"],
+            "path": ["general_ledger"]
+          },
+          "description": "Create a new transaction in the general ledger"
+        },
+        "response": []
+      },
+      {
+        "name": "Get Transaction by ID",
+        "request": {
+          "method": "GET",
+          "header": [],
+          "url": {
+            "raw": "{{baseURL}}/general_ledger/:id",
+            "host": ["{{baseURL}}"],
+            "path": ["general_ledger", ":id"],
+            "variable": [
+              {
+                "key": "id",
+                "value": "1"
+              }
+            ]
+          },
+          "description": "Retrieve a specific transaction by its ID"
+        },
+        "response": []
+      },
+      {
+        "name": "Update Transaction",
+        "request": {
+          "method": "PUT",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"account_type\": \"expense\",\n    \"amount\": 300.00\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/general_ledger/:id",
+            "host": ["{{baseURL}}"],
+            "path": ["general_ledger", ":id"],
+            "variable": [
+              {
+                "key": "id",
+                "value": "1"
+              }
+            ]
+          },
+          "description": "Update an existing transaction in the general ledger"
+        },
+        "response": []
+      },
+      {
+        "name": "Delete Transaction",
+        "request": {
+          "method": "DELETE",
+          "header": [],
+          "url": {
+            "raw": "{{baseURL}}/general_ledger/:id",
+            "host": ["{{baseURL}}"],
+            "path": ["general_ledger", ":id"],
+            "variable": [
+              {
+                "key": "id",
+                "value": "1"
+              }
+            ]
+          },
+          "description": "Delete a specific transaction from the general ledger"
+        },
+        "response": []
+      }
+    ]
+  }
+  
