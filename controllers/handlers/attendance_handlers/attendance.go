@@ -8,6 +8,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"time"
 )
 
 // CreateAttendanceRecord handles the creation of a new attendance record.
@@ -105,4 +106,27 @@ func GetAttendanceByUserID(store models.AttendanceStore) http.HandlerFunc {
 		w.WriteHeader(http.StatusOK)
 		json.NewEncoder(w).Encode(attendanceRecords)
 	}
+}
+
+// CalculateWorkingHours calculates the total working hours based on check-in and check-out times.
+// Parameters:
+//   - checkIn: The time the employee checked in.
+//   - checkOut: The time the employee checked out.
+//
+// Returns:
+//   - float64: The total working hours as a decimal value.
+//   - error: An error if the check-out time is invalid or earlier than the check-in time.
+func CalculateWorkingHours(checkIn, checkOut time.Time) (float64, error) {
+	// Check if check-out time is before check-in or not provided
+	if checkOut.IsZero() || checkOut.Before(checkIn) {
+		return 0, fmt.Errorf("invalid check-out time")
+	}
+
+	// Calculate the duration between check-in and check-out
+	duration := checkOut.Sub(checkIn)
+
+	// Convert the duration to hours as a decimal
+	workingHours := duration.Hours()
+
+	return workingHours, nil
 }
