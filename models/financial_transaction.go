@@ -4,9 +4,9 @@ import "time"
 
 // FinancialTransaction represents a financial transaction in the system
 type FinancialTransaction struct {
-	ID            int       `json:"id"`
-	AccountType   string    `json:"account_type"`
-	Amount        float64   `json:"amount"`
+	ID              int       `json:"id"`
+	AccountType     string    `json:"account_type"`
+	Amount          float64   `json:"amount"`
 	TransactionDate time.Time `json:"transaction_date"`
 }
 

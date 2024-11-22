@@ -1,0 +1,106 @@
+{
+    "info": {
+      "name": "Auth API",
+      "description": "Collection for testing Auth API endpoints",
+      "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+    },
+    "item": [
+      {
+        "name": "Signup",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"name\": \"John Doe\",\n    \"email\": \"johndoe@example.com\",\n    \"role\": \"Employee\",\n    \"department\": \"Sales\"\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/auth/signup",
+            "host": ["{{baseURL}}"],
+            "path": ["auth", "signup"]
+          },
+          "description": "Signup a new user with name, email, role, and department"
+        },
+        "response": []
+      },
+      {
+        "name": "Check User",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"email\": \"johndoe@example.com\"\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/auth/check-user",
+            "host": ["{{baseURL}}"],
+            "path": ["auth", "check-user"]
+          },
+          "description": "Check if a user with a specific email exists"
+        },
+        "response": []
+      },
+      {
+        "name": "Set New Password",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"email\": \"johndoe@example.com\",\n    \"new_password\": \"1\"\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/auth/set-new-password",
+            "host": ["{{baseURL}}"],
+            "path": ["auth", "set-new-password"]
+          },
+          "description": "Set a new password for an existing user"
+        },
+        "response": []
+      },
+      {
+        "name": "Login",
+        "request": {
+          "method": "POST",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json",
+              "type": "text"
+            }
+          ],
+          "body": {
+            "mode": "raw",
+            "raw": "{\n    \"email\": \"johndoe@example.com\",\n    \"password\": \"1\"\n}"
+          },
+          "url": {
+            "raw": "{{baseURL}}/auth/login",
+            "host": ["{{baseURL}}"],
+            "path": ["auth", "login"]
+          },
+          "description": "Log in a user with email and password"
+        },
+        "response": []
+      }
+    ]
+  }
+  
