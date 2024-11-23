@@ -1,7 +1,7 @@
 # Variables
 DB_USER=postgres
 DB_NAME=erp
-MIGRATION_FILE=db/migration.sql
+MIGRATION_FILE=models/db/migration.sql
 APP_BINARY=main.go
 TEST_PATTERN=./...  # Recursively run tests in all directories
 
