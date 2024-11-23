@@ -2,10 +2,10 @@ package routes
 
 import (
 	"database/sql"
-	"erp/handlers/accounts_payable_handlers"
-	"erp/handlers/auth_handlers"
-	"erp/handlers/customer_data_management_handlers" // Import customer handlers package
-	"erp/handlers/general_ledger_handlers"
+	"erp/controllers/handlers/accounts_payable_handlers"
+	"erp/controllers/handlers/auth_handlers"
+	"erp/controllers/handlers/customer_data_management_handlers" // Import customer handlers package
+	"erp/controllers/handlers/general_ledger_handlers"
 
 	"github.com/gorilla/mux"
 )
