@@ -113,3 +113,15 @@ CREATE TABLE payments (
     payment_date DATE NOT NULL,
     payment_method VARCHAR(50)
 );
+
+-- Financial Transaction Table with Foreign Keys
+CREATE TABLE financial_transactions (
+    id SERIAL PRIMARY KEY,
+    account_type VARCHAR(50) NOT NULL,  -- 'accounts_receivable', 'revenue', 'expense', etc.
+    amount DECIMAL(10, 2) NOT NULL,
+    transaction_date DATE NOT NULL,
+    transaction_type VARCHAR(50),  -- 'credit', 'debit' for tracking inflow and outflow
+    invoice_id INT REFERENCES invoices(id) ON DELETE SET NULL,  -- Link to invoice if related
+    payment_id INT REFERENCES payments(id) ON DELETE SET NULL,  -- Link to payment if related
+    description TEXT   -- Optional, for further clarification (e.g., "Payment for invoice #123")
+);

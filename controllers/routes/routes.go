@@ -34,9 +34,9 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	customerRouter := router.PathPrefix("/customers").Subrouter()
 
 	// Register customer routes
-	customerRouter.HandleFunc("", customerHandlers.CreateCustomerHandler).Methods("POST")               // Create customer
-	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.GetCustomerByIDHandler).Methods("GET")   // Get customer by ID
-	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.UpdateCustomerHandler).Methods("PUT")    // Update customer
+	customerRouter.HandleFunc("", customerHandlers.CreateCustomerHandler).Methods("POST")  // Create customer
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.GetCustomerByIDHandler).Methods("GET")  // Get customer by ID
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.UpdateCustomerHandler).Methods("PUT") // Update customer
 	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.DeleteCustomerHandler).Methods("DELETE") // Delete customer
 
 	// Protected routes: requires JWT authentication (example)
@@ -51,6 +51,13 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	accountsPayableRouter := router.PathPrefix("/accounts_payable").Subrouter()
 	accounts_payable_handlers.RegisterRoutes(accountsPayableRouter, accountsPayableStore, generalLedgerStore)
 
+	// Initialize accounts receivable handlers and routes
+	accountReceivableStore := &accounts_payable_handlers.DBPaymentStore{DB: db} // PaymentStore implementation
+	accountReceivableRouter := router.PathPrefix("/accounts_receivable").Subrouter()
+	accounts_payable_handlers.RegisterRoutes(accountReceivableRouter, accountReceivableStore, generalLedgerStore)
+
+	// initialize financial transaction handlers and routes
+	// todo: implement financial transaction handlers
 	// Initialize invoice handlers and routes
 	invoiceStore := &invoice_handlers.DBInvoiceStore{DB: db}
 	invoiceHandlers := &invoice_handlers.InvoiceHandlers{Store: invoiceStore}
