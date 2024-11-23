@@ -4,7 +4,7 @@ package auth_handlers
 import (
 	"encoding/json"
 	"erp/models"
-	"erp/utils"
+	"erp/controllers/utils"
 	"errors"
 	"fmt"
 
