@@ -6,6 +6,7 @@ import (
 	"erp/controllers/handlers/auth_handlers"
 	"erp/controllers/handlers/customer_data_management_handlers" // Import customer handlers package
 	"erp/controllers/handlers/general_ledger_handlers"
+	"erp/controllers/handlers/invoice_handlers"
 
 	"github.com/gorilla/mux"
 )
@@ -57,6 +58,16 @@ func InitRoutes(db *sql.DB) *mux.Router {
 
 	// initialize financial transaction handlers and routes
 	// todo: implement financial transaction handlers
+	// Initialize invoice handlers and routes
+	invoiceStore := &invoice_handlers.DBInvoiceStore{DB: db}
+	invoiceHandlers := &invoice_handlers.InvoiceHandlers{Store: invoiceStore}
+
+	// Create a subrouter for invoice routes
+	invoiceRouter := router.PathPrefix("/invoices").Subrouter()
+
+	// Register invoice routes
+	invoiceRouter.HandleFunc("", invoiceHandlers.CreateInvoiceHandler).Methods("POST")             // Create invoice
+	invoiceRouter.HandleFunc("/{id:[0-9]+}", invoiceHandlers.GetInvoiceByIDHandler).Methods("GET") // Get invoice by ID
 
 	return router
 }
