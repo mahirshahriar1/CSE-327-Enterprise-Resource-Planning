@@ -1,4 +1,6 @@
 // Package financial_record_handlers provides SQL-backed methods to manage financial records.
+// It includes a DBFinancialRecordStore struct that implements the CRUD operations required
+// for the `financial_records` table in the database.
 package financial_record_handlers
 
 import (
@@ -8,14 +10,21 @@ import (
 )
 
 // DBFinancialRecordStore provides SQL-backed methods to manage financial records.
-// It implements the CRUD operations required for managing the `financial_records` table
-// in the database.
+// This struct interacts with the `financial_records` table in the database to perform
+// create, read, update, and delete (CRUD) operations.
 type DBFinancialRecordStore struct {
-	DB *sql.DB // DB represents the database connection.
+	// DB represents the database connection used for executing SQL queries.
+	DB *sql.DB
 }
 
-// CreateFinancialRecord inserts a new financial record into the database.
-// It generates a new ID for the financial record and stores it in the provided `FinancialRecord` object.
+// CreateFinancialRecord inserts a new financial record into the database and assigns
+// the generated ID to the provided FinancialRecord object.
+//
+// Parameters:
+//   - financialRecord: A pointer to the FinancialRecord object containing the details of the record to be created.
+//
+// Returns:
+//   - An error if the operation fails, or nil if the record is successfully created.
 func (store *DBFinancialRecordStore) CreateFinancialRecord(financialRecord *models.FinancialRecord) error {
 	return store.DB.QueryRow(
 		"INSERT INTO financial_records (transaction_id, account_id, amount, transaction_date, transaction_type, description) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id",
@@ -23,7 +32,14 @@ func (store *DBFinancialRecordStore) CreateFinancialRecord(financialRecord *mode
 	).Scan(&financialRecord.ID)
 }
 
-// GetFinancialRecordByID retrieves a financial record by its ID from the database.
+// GetFinancialRecordByID retrieves a financial record from the database by its ID.
+//
+// Parameters:
+//   - id: The unique identifier of the financial record to be retrieved.
+//
+// Returns:
+//   - A pointer to the FinancialRecord object if the record is found.
+//   - An error if the record does not exist or if the operation fails.
 func (store *DBFinancialRecordStore) GetFinancialRecordByID(id int) (*models.FinancialRecord, error) {
 	row := store.DB.QueryRow("SELECT id, transaction_id, account_id, amount, transaction_date, transaction_type, description FROM financial_records WHERE id = $1", id)
 
@@ -36,6 +52,12 @@ func (store *DBFinancialRecordStore) GetFinancialRecordByID(id int) (*models.Fin
 }
 
 // UpdateFinancialRecord updates an existing financial record in the database.
+//
+// Parameters:
+//   - financialRecord: A pointer to the FinancialRecord object containing updated details. The ID field must be set.
+//
+// Returns:
+//   - An error if the operation fails, or if no rows are affected (indicating the record does not exist).
 func (store *DBFinancialRecordStore) UpdateFinancialRecord(financialRecord *models.FinancialRecord) error {
 	result, err := store.DB.Exec(
 		"UPDATE financial_records SET transaction_id = $1, account_id = $2, amount = $3, transaction_date = $4, transaction_type = $5, description = $6 WHERE id = $7",
@@ -56,7 +78,13 @@ func (store *DBFinancialRecordStore) UpdateFinancialRecord(financialRecord *mode
 	return nil
 }
 
-// DeleteFinancialRecord deletes a financial record by its ID from the database.
+// DeleteFinancialRecord deletes a financial record from the database by its ID.
+//
+// Parameters:
+//   - id: The unique identifier of the financial record to be deleted.
+//
+// Returns:
+//   - An error if the operation fails, or if no rows are affected (indicating the record does not exist).
 func (store *DBFinancialRecordStore) DeleteFinancialRecord(id int) error {
 	result, err := store.DB.Exec("DELETE FROM financial_records WHERE id = $1", id)
 	if err != nil {
