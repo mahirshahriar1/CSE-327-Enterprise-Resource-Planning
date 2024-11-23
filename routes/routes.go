@@ -34,9 +34,9 @@ func InitRoutes(db *sql.DB) *mux.Router {
 	customerRouter := router.PathPrefix("/customers").Subrouter()
 
 	// Register customer routes
-	customerRouter.HandleFunc("", customerHandlers.CreateCustomerHandler).Methods("POST")               // Create customer
-	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.GetCustomerByIDHandler).Methods("GET")   // Get customer by ID
-	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.UpdateCustomerHandler).Methods("PUT")    // Update customer
+	customerRouter.HandleFunc("", customerHandlers.CreateCustomerHandler).Methods("POST")  // Create customer
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.GetCustomerByIDHandler).Methods("GET")  // Get customer by ID
+	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.UpdateCustomerHandler).Methods("PUT") // Update customer
 	customerRouter.HandleFunc("/{id:[0-9]+}", customerHandlers.DeleteCustomerHandler).Methods("DELETE") // Delete customer
 
 	// Protected routes: requires JWT authentication (example)
