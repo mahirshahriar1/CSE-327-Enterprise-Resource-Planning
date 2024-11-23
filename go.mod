@@ -3,6 +3,7 @@ module erp
 go 1.23.1
 
 require (
+	github.com/DATA-DOG/go-sqlmock v1.5.2
 	github.com/dgrijalva/jwt-go v3.2.0+incompatible
 	github.com/go-playground/validator/v10 v10.22.1
 	github.com/gorilla/handlers v1.5.2
