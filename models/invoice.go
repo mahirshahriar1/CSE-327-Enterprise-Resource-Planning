@@ -13,8 +13,7 @@ type Invoice struct {
 type InvoiceStore interface {
 	CreateInvoice(invoice *Invoice) error
 	GetInvoiceByID(id int) (*Invoice, error)
-	//UpdateInvoice(invoice *Invoice) error
-	//DeleteInvoice(id int) error
-	// UpdateInvoice(invoice *Invoice) error
-	// DeleteInvoice(id int) error
+	UpdateInvoice(invoice *Invoice) error
+	DeleteInvoice(id int) error
+	
 }
