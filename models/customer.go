@@ -1,5 +1,9 @@
 package models
 
+import "errors"
+
+var ErrNotFound = errors.New("resource not found")
+
 // Customer represents a customer in the system
 type Customer struct {
 	ID           int    `json:"id"`
