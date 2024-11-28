@@ -1,5 +1,5 @@
-// Package accounts_payable_handlers provides handlers for CRUD operations 
-// on accounts payable resources. It includes test cases for validating 
+// Package accounts_payable_handlers provides handlers for CRUD operations
+// on accounts payable resources. It includes test cases for validating
 // the functionality of these handlers using a mock PaymentStore implementation.
 package accounts_payable_handlers
 

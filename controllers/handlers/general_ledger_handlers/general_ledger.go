@@ -120,6 +120,7 @@ func (h *GeneralLedgerHandler) UpdateTransaction(w http.ResponseWriter, r *http.
 		http.Error(w, "Invalid transaction ID", http.StatusBadRequest)
 		return
 	}
+	fmt.Println("ID: ", id)
 
 	var transaction models.FinancialTransaction
 	if err := json.NewDecoder(r.Body).Decode(&transaction); err != nil {
