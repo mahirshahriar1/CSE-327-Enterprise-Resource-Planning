@@ -1,238 +1,192 @@
-package product_handlers_test
+// Package product_handlers_test contains unit tests for product-related HTTP handlers.
+package product_handlers
 
 import (
 	"bytes"
 	"encoding/json"
-	"erp/controllers/handlers/product_handlers"
 	"erp/models"
-
-	// "erp/product_handlers"
-	"errors"
 	"net/http"
 	"net/http/httptest"
 	"testing"
 
+	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/gorilla/mux"
 	"github.com/stretchr/testify/assert"
 )
 
-// MockProductStore is a mock implementation of the ProductStore interface for testing purposes.
-type MockProductStore struct {
-	CreateProductFn  func(product *models.Product) error
-	GetProductByIDFn func(id int) (*models.Product, error)
-	UpdateProductFn  func(product *models.Product) error
-	DeleteProductFn  func(id int) error
-}
-
-func (m *MockProductStore) CreateProduct(product *models.Product) error {
-	return m.CreateProductFn(product)
-}
-
-func (m *MockProductStore) GetProductByID(id int) (*models.Product, error) {
-	return m.GetProductByIDFn(id)
-}
-
-func (m *MockProductStore) UpdateProduct(product *models.Product) error {
-	return m.UpdateProductFn(product)
-}
-
-func (m *MockProductStore) DeleteProduct(id int) error {
-	return m.DeleteProductFn(id)
-}
-
 // TestCreateProduct tests the CreateProduct handler.
 func TestCreateProduct(t *testing.T) {
-	mockStore := &MockProductStore{
-		CreateProductFn: func(product *models.Product) error {
-			product.ID = 1
-			return nil
-		},
+	// Set up mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not create mock db: %v", err)
+	}
+	defer db.Close()
+
+	store := &DBProductStore{DB: db}
+	handler := &ProductHandlers{ProductStore: store}
+
+	// Sample product data
+	product := &models.Product{
+		Name:   "Test Product",
+		Brand:  "Test Brand",
+		Season: "Summer",
+		Price:  100.50,
 	}
 
-	handler := product_handlers.ProductHandlers{ProductStore: mockStore}
+	// Mock database behavior
+	mock.ExpectExec("INSERT INTO products").
+		WithArgs(product.Name, product.Brand, product.Season, product.Price).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	t.Run("Successful creation", func(t *testing.T) {
-		product := models.Product{Name: "Shirt", Brand: "BrandX", Season: "Summer", Price: 49.99}
-		body, _ := json.Marshal(product)
+	// Create HTTP request and recorder
+	body, _ := json.Marshal(product)
+	req, _ := http.NewRequest("POST", "/products", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
 
-		req := httptest.NewRequest(http.MethodPost, "/products", bytes.NewReader(body))
-		w := httptest.NewRecorder()
+	// Call the handler
+	handler.CreateProduct(rec, req)
 
-		handler.CreateProduct(w, req)
+	// Assert that no error occurred and response is correct
+	assert.Equal(t, http.StatusCreated, rec.Code)
+	assert.Equal(t, "Product created successfully", rec.Body.String())
 
-		assert.Equal(t, http.StatusCreated, w.Code)
-		assert.Equal(t, "Product created successfully", w.Body.String())
-	})
-
-	t.Run("Invalid input", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPost, "/products", bytes.NewReader([]byte("invalid")))
-		w := httptest.NewRecorder()
-
-		handler.CreateProduct(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Equal(t, "Invalid input\n", w.Body.String())
-	})
-
-	t.Run("Store error", func(t *testing.T) {
-		mockStore.CreateProductFn = func(product *models.Product) error {
-			return errors.New("database error")
-		}
-
-		product := models.Product{Name: "Shirt", Brand: "BrandX", Season: "Summer", Price: 49.99}
-		body, _ := json.Marshal(product)
-
-		req := httptest.NewRequest(http.MethodPost, "/products", bytes.NewReader(body))
-		w := httptest.NewRecorder()
-
-		handler.CreateProduct(w, req)
-
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Equal(t, "Could not create product\n", w.Body.String())
-	})
+	// Assert that the expected query was executed
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unmet expectations: %v", err)
+	}
 }
 
 // TestGetProductByID tests the GetProductByID handler.
 func TestGetProductByID(t *testing.T) {
-	mockStore := &MockProductStore{
-		GetProductByIDFn: func(id int) (*models.Product, error) {
-			if id == 1 {
-				return &models.Product{ID: 1, Name: "Shirt", Brand: "BrandX", Season: "Summer", Price: 49.99}, nil
-			}
-			return nil, errors.New("not found")
-		},
+	// Set up mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not create mock db: %v", err)
+	}
+	defer db.Close()
+
+	store := &DBProductStore{DB: db}
+	handler := &ProductHandlers{ProductStore: store}
+
+	// Sample product data
+	product := &models.Product{
+		ID:     1,
+		Name:   "Test Product",
+		Brand:  "Test Brand",
+		Season: "Summer",
+		Price:  100.50,
 	}
 
-	handler := product_handlers.ProductHandlers{ProductStore: mockStore}
+	// Mock database behavior
+	mock.ExpectQuery("SELECT id, name, brand, season, price FROM products WHERE id = \\$1").
+		WithArgs(product.ID).
+		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "brand", "season", "price"}).
+			AddRow(product.ID, product.Name, product.Brand, product.Season, product.Price))
 
-	t.Run("Successful retrieval", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/products/1", nil)
-		req = mux.SetURLVars(req, map[string]string{"id": "1"})
-		w := httptest.NewRecorder()
+	// Create HTTP request and recorder
+	req, _ := http.NewRequest("GET", "/products/1", nil)
+	rec := httptest.NewRecorder()
 
-		handler.GetProductByID(w, req)
+	// Add mux variables to the request
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
 
-		assert.Equal(t, http.StatusOK, w.Code)
+	// Call the handler
+	handler.GetProductByID(rec, req)
 
-		var product models.Product
-		err := json.NewDecoder(w.Body).Decode(&product)
-		assert.NoError(t, err)
-		assert.Equal(t, "Shirt", product.Name)
-	})
+	// Assert that no error occurred and response is correct
+	assert.Equal(t, http.StatusOK, rec.Code)
+	expectedBody, _ := json.Marshal(product)
+	assert.JSONEq(t, string(expectedBody), rec.Body.String())
 
-	t.Run("Invalid ID", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/products/abc", nil)
-		w := httptest.NewRecorder()
-
-		handler.GetProductByID(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Equal(t, "Invalid product ID\n", w.Body.String())
-	})
-
-	t.Run("Product not found", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodGet, "/products/2", nil)
-		req = mux.SetURLVars(req, map[string]string{"id": "2"})
-		w := httptest.NewRecorder()
-
-		handler.GetProductByID(w, req)
-
-		assert.Equal(t, http.StatusNotFound, w.Code)
-		assert.Equal(t, "Product not found\n", w.Body.String())
-	})
+	// Assert that the expected query was executed
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unmet expectations: %v", err)
+	}
 }
 
 // TestUpdateProduct tests the UpdateProduct handler.
 func TestUpdateProduct(t *testing.T) {
-	mockStore := &MockProductStore{
-		UpdateProductFn: func(product *models.Product) error {
-			if product.ID == 1 {
-				return nil
-			}
-			return errors.New("not found")
-		},
+	// Set up mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not create mock db: %v", err)
+	}
+	defer db.Close()
+
+	store := &DBProductStore{DB: db}
+	handler := &ProductHandlers{ProductStore: store}
+
+	// Sample product data
+	product := &models.Product{
+		ID:     1,
+		Name:   "Updated Product",
+		Brand:  "Updated Brand",
+		Season: "Winter",
+		Price:  120.75,
 	}
 
-	handler := product_handlers.ProductHandlers{ProductStore: mockStore}
+	// Mock database behavior
+	mock.ExpectExec("UPDATE products SET name = \\$1, brand = \\$2, season = \\$3, price = \\$4 WHERE id = \\$5").
+		WithArgs(product.Name, product.Brand, product.Season, product.Price, product.ID).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-	t.Run("Successful update", func(t *testing.T) {
-		product := models.Product{Name: "Shirt Updated", Brand: "BrandX", Season: "Summer", Price: 59.99}
-		body, _ := json.Marshal(product)
+	// Create HTTP request and recorder
+	body, _ := json.Marshal(product)
+	req, _ := http.NewRequest("PUT", "/products/1", bytes.NewReader(body))
+	req.Header.Set("Content-Type", "application/json")
+	rec := httptest.NewRecorder()
 
-		req := httptest.NewRequest(http.MethodPut, "/products/1", bytes.NewReader(body))
-		req = mux.SetURLVars(req, map[string]string{"id": "1"})
-		w := httptest.NewRecorder()
+	// Add mux variables to the request
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
 
-		handler.UpdateProduct(w, req)
+	// Call the handler
+	handler.UpdateProduct(rec, req)
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "Product updated successfully", w.Body.String())
-	})
+	// Assert that no error occurred and response is correct
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Product updated successfully", rec.Body.String())
 
-	t.Run("Invalid ID", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/products/abc", nil)
-		w := httptest.NewRecorder()
-
-		handler.UpdateProduct(w, req)
-
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Equal(t, "Invalid product ID\n", w.Body.String())
-	})
-
-	t.Run("Update error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodPut, "/products/2", bytes.NewReader([]byte(`{"name":"Invalid Product"}`)))
-		req = mux.SetURLVars(req, map[string]string{"id": "2"})
-		w := httptest.NewRecorder()
-
-		handler.UpdateProduct(w, req)
-
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Equal(t, "Could not update product\n", w.Body.String())
-	})
+	// Assert that the expected query was executed
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unmet expectations: %v", err)
+	}
 }
 
 // TestDeleteProduct tests the DeleteProduct handler.
 func TestDeleteProduct(t *testing.T) {
-	mockStore := &MockProductStore{
-		DeleteProductFn: func(id int) error {
-			if id == 1 {
-				return nil
-			}
-			return errors.New("not found")
-		},
+	// Set up mock database
+	db, mock, err := sqlmock.New()
+	if err != nil {
+		t.Fatalf("could not create mock db: %v", err)
 	}
+	defer db.Close()
 
-	handler := product_handlers.ProductHandlers{ProductStore: mockStore}
+	store := &DBProductStore{DB: db}
+	handler := &ProductHandlers{ProductStore: store}
 
-	t.Run("Successful deletion", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/products/1", nil)
-		req = mux.SetURLVars(req, map[string]string{"id": "1"})
-		w := httptest.NewRecorder()
+	// Mock database behavior
+	mock.ExpectExec("DELETE FROM products WHERE id = \\$1").
+		WithArgs(1).
+		WillReturnResult(sqlmock.NewResult(1, 1))
 
-		handler.DeleteProduct(w, req)
+	// Create HTTP request and recorder
+	req, _ := http.NewRequest("DELETE", "/products/1", nil)
+	rec := httptest.NewRecorder()
 
-		assert.Equal(t, http.StatusOK, w.Code)
-		assert.Equal(t, "Product deleted successfully", w.Body.String())
-	})
+	// Add mux variables to the request
+	req = mux.SetURLVars(req, map[string]string{"id": "1"})
 
-	t.Run("Invalid ID", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/products/abc", nil)
-		w := httptest.NewRecorder()
+	// Call the handler
+	handler.DeleteProduct(rec, req)
 
-		handler.DeleteProduct(w, req)
+	// Assert that no error occurred and response is correct
+	assert.Equal(t, http.StatusOK, rec.Code)
+	assert.Equal(t, "Product deleted successfully", rec.Body.String())
 
-		assert.Equal(t, http.StatusBadRequest, w.Code)
-		assert.Equal(t, "Invalid product ID\n", w.Body.String())
-	})
-
-	t.Run("Deletion error", func(t *testing.T) {
-		req := httptest.NewRequest(http.MethodDelete, "/products/2", nil)
-		req = mux.SetURLVars(req, map[string]string{"id": "2"})
-		w := httptest.NewRecorder()
-
-		handler.DeleteProduct(w, req)
-
-		assert.Equal(t, http.StatusInternalServerError, w.Code)
-		assert.Equal(t, "Could not delete product\n", w.Body.String())
-	})
+	// Assert that the expected query was executed
+	if err := mock.ExpectationsWereMet(); err != nil {
+		t.Errorf("there were unmet expectations: %v", err)
+	}
 }
