@@ -41,5 +41,3 @@ func (store *DBInvoiceStore) GetInvoiceByID(id int) (*models.Invoice, error) {
 	}
 	return invoice, nil
 }
-
-
