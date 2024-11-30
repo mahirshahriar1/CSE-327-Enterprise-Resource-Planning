@@ -8,6 +8,7 @@ type FinancialTransaction struct {
 	AccountType     string    `json:"account_type"`
 	Amount          float64   `json:"amount"`
 	TransactionDate time.Time `json:"transaction_date"`
+	Description     string    `json:"description"`
 }
 
 // FinancialTransactionStore defines an interface for financial transaction-related database operations
