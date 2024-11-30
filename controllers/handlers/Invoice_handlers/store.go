@@ -1,17 +1,19 @@
+// Package invoice_handlers provides the database implementation for invoice-related operations.
+// It includes functionality for creating, retrieving, updating, and deleting invoices in the database.
 package invoice_handlers
 
 import (
 	"database/sql"
-	"erp/models" // Adjust import path as needed
+	"erp/models"
 	"errors"
 )
 
-// DBInvoiceStore is a struct to hold the database connection for invoice operations
+// DBInvoiceStore is a struct to hold the database connection for invoice operations.
 type DBInvoiceStore struct {
 	DB *sql.DB
 }
 
-// CreateInvoice creates a new invoice in the database
+// CreateInvoice inserts a new invoice into the database.
 func (store *DBInvoiceStore) CreateInvoice(invoice *models.Invoice) error {
 	query := `
         INSERT INTO invoices (sales_order_id, customer_id, amount, status)
@@ -25,7 +27,7 @@ func (store *DBInvoiceStore) CreateInvoice(invoice *models.Invoice) error {
 	return nil
 }
 
-// GetInvoiceByID retrieves an invoice by its ID from the database
+// GetInvoiceByID retrieves an invoice by its ID from the database.
 func (store *DBInvoiceStore) GetInvoiceByID(id int) (*models.Invoice, error) {
 	query := `
         SELECT id, sales_order_id, customer_id, amount, status
@@ -42,4 +44,29 @@ func (store *DBInvoiceStore) GetInvoiceByID(id int) (*models.Invoice, error) {
 	return invoice, nil
 }
 
+// UpdateInvoice updates an existing invoice's details in the database.
+func (store *DBInvoiceStore) UpdateInvoice(invoice *models.Invoice) error {
+	query := `
+        UPDATE invoices
+        SET sales_order_id = $1, customer_id = $2, amount = $3, status = $4
+        WHERE id = $5
+    `
+	_, err := store.DB.Exec(query, invoice.SalesOrderID, invoice.CustomerID, invoice.Amount, invoice.Status, invoice.ID)
+	if err != nil {
+		return err
+	}
+	return nil
+}
 
+// DeleteInvoice deletes an invoice from the database by its ID.
+func (store *DBInvoiceStore) DeleteInvoice(id int) error {
+	query := `
+        DELETE FROM invoices
+        WHERE id = $1
+    `
+	_, err := store.DB.Exec(query, id)
+	if err != nil {
+		return err
+	}
+	return nil
+}
