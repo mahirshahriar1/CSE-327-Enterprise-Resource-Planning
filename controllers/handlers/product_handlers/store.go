@@ -1,3 +1,4 @@
+// Package product_handlers contains the database store implementations for managing product records.
 package product_handlers
 
 import (
@@ -6,89 +7,84 @@ import (
 	"fmt"
 )
 
-// ProductStoreImpl implements the ProductStore interface using a SQL database.
-//
-// It provides methods for creating, retrieving, updating, and deleting products
-// in the database using SQL queries. This implementation assumes that a valid
-// *sql.DB connection is provided.
-type ProductStoreImpl struct {
+// DBProductStore implements the ProductStore interface for database operations.
+type DBProductStore struct {
 	DB *sql.DB
 }
 
-// NewProductStoreImpl creates a new instance of ProductStoreImpl.
-//
-// It accepts a database connection and returns a ProductStore instance that
-// can be used for managing products in the inventory.
+// NewDBProductStore initializes a new DBProductStore instance.
 //
 // Parameters:
-// - db: A pointer to an open SQL database connection.
+// - db: A *sql.DB instance representing the database connection.
 //
 // Returns:
-// - A ProductStore implementation.
-func NewProductStoreImpl(db *sql.DB) *ProductStoreImpl {
-	return &ProductStoreImpl{
-		DB: db,
-	}
+// - A pointer to an instance of DBProductStore.
+func NewDBProductStore(db *sql.DB) *DBProductStore {
+	return &DBProductStore{DB: db}
 }
 
-// CreateProduct adds a new product to the database.
-//
-// It inserts the provided product details into the products table. If an error
-// occurs during insertion, the error is returned.
+// CreateProduct inserts a new product record into the database.
 //
 // Parameters:
-// - product: A pointer to the Product object containing product details.
+// - product: A pointer to the Product struct containing the product details to insert.
 //
 // Returns:
-// - An error if the insertion fails; nil otherwise.
-func (store *ProductStoreImpl) CreateProduct(product *models.Product) error {
-	query := `INSERT INTO products (name, brand, season, price) VALUES ($1, $2, $3, $4) RETURNING id`
-	err := store.DB.QueryRow(query, product.Name, product.Brand, product.Season, product.Price).Scan(&product.ID)
+// - An error if the insertion fails, otherwise nil.
+func (s *DBProductStore) CreateProduct(product *models.Product) error {
+	query := `
+		INSERT INTO products (name, brand, season, price)
+		VALUES ($1, $2, $3, $4)
+		RETURNING id
+	`
+	err := s.DB.QueryRow(query, product.Name, product.Brand, product.Season, product.Price).Scan(&product.ID)
 	if err != nil {
-		return fmt.Errorf("failed to create product: %w", err)
+		return fmt.Errorf("failed to insert product: %w", err)
 	}
 	return nil
 }
 
-// GetProductByID retrieves a product by its ID from the database.
-//
-// It queries the products table for a product with the specified ID and returns
-// a pointer to the Product object if found. If no product is found or an error
-// occurs, an error is returned.
+// GetProductByID retrieves a product record from the database by ID.
 //
 // Parameters:
-// - id: The ID of the product to retrieve.
+// - id: An integer representing the product ID.
 //
 // Returns:
-// - A pointer to the Product object if found; nil and an error otherwise.
-func (store *ProductStoreImpl) GetProductByID(id int) (*models.Product, error) {
-	query := `SELECT id, name, brand, season, price FROM products WHERE id = $1`
-	row := store.DB.QueryRow(query, id)
+// - A pointer to the Product struct if found.
+// - An error if no record is found or if the query fails.
+func (s *DBProductStore) GetProductByID(id int) (*models.Product, error) {
+	query := `
+		SELECT id, name, brand, season, price
+		FROM products
+		WHERE id = $1
+	`
+	row := s.DB.QueryRow(query, id)
 
-	product := &models.Product{}
+	var product models.Product
 	err := row.Scan(&product.ID, &product.Name, &product.Brand, &product.Season, &product.Price)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return nil, fmt.Errorf("product with ID %d not found", id)
+			return nil, fmt.Errorf("no product found with ID %d", id)
 		}
 		return nil, fmt.Errorf("failed to retrieve product: %w", err)
 	}
-	return product, nil
+
+	return &product, nil
 }
 
-// UpdateProduct updates an existing product in the database.
-//
-// It modifies the product details with the specified ID based on the provided
-// Product object. If an error occurs during the update, it is returned.
+// UpdateProduct updates an existing product record in the database.
 //
 // Parameters:
-// - product: A pointer to the Product object containing updated product details.
+// - product: A pointer to the Product struct containing the updated product details.
 //
 // Returns:
-// - An error if the update fails; nil otherwise.
-func (store *ProductStoreImpl) UpdateProduct(product *models.Product) error {
-	query := `UPDATE products SET name = $1, brand = $2, season = $3, price = $4 WHERE id = $5`
-	result, err := store.DB.Exec(query, product.Name, product.Brand, product.Season, product.Price, product.ID)
+// - An error if the update fails, otherwise nil.
+func (s *DBProductStore) UpdateProduct(product *models.Product) error {
+	query := `
+		UPDATE products
+		SET name = $1, brand = $2, season = $3, price = $4
+		WHERE id = $5
+	`
+	result, err := s.DB.Exec(query, product.Name, product.Brand, product.Season, product.Price, product.ID)
 	if err != nil {
 		return fmt.Errorf("failed to update product: %w", err)
 	}
@@ -98,26 +94,27 @@ func (store *ProductStoreImpl) UpdateProduct(product *models.Product) error {
 		return fmt.Errorf("failed to check rows affected: %w", err)
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("no product with ID %d found", product.ID)
+		return fmt.Errorf("no product found with ID %d", product.ID)
 	}
+
 	return nil
 }
 
-// DeleteProduct removes a product by its ID from the database.
-//
-// It deletes the product record with the specified ID. If an error occurs during
-// deletion or no record is found, an error is returned.
+// DeleteProduct removes a product record from the database by ID.
 //
 // Parameters:
-// - id: The ID of the product to delete.
+// - id: An integer representing the product ID to delete.
 //
 // Returns:
-// - An error if the deletion fails or if no matching record is found.
-func (store *ProductStoreImpl) DeleteProduct(id int) error {
-	query := `DELETE FROM products WHERE id = $1`
-	result, err := store.DB.Exec(query, id)
+// - An error if the deletion fails, otherwise nil.
+func (s *DBProductStore) DeleteProduct(id int) error {
+	query := `
+		DELETE FROM products
+		WHERE id = $1
+	`
+	result, err := s.DB.Exec(query, id)
 	if err != nil {
-		return fmt.Errorf("failed to delete product: %w", err)
+		return fmt.Errorf("failed to delete product with ID %d: %w", id, err)
 	}
 
 	rowsAffected, err := result.RowsAffected()
@@ -125,7 +122,8 @@ func (store *ProductStoreImpl) DeleteProduct(id int) error {
 		return fmt.Errorf("failed to check rows affected: %w", err)
 	}
 	if rowsAffected == 0 {
-		return fmt.Errorf("no product with ID %d found", id)
+		return fmt.Errorf("no product found with ID %d", id)
 	}
+
 	return nil
 }
