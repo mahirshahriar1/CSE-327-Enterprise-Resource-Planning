@@ -2,13 +2,13 @@
 // These tests ensure correctness by validating invoice creation, retrieval, updating, and deletion.
 // A mock data store is used to simulate a database in an isolated environment.
 
-package invoice_handlers_test
+package invoice_handlers
 
 import (
 	"bytes"
 	"encoding/json"
+
 	"erp/models"
-	"erp/controllers/handlers/invoice_handlers"
 	"net/http"
 	"net/http/httptest"
 	"testing"
@@ -108,7 +108,7 @@ func (m *MockInvoiceStore) DeleteInvoice(id int) error {
 //   - Verify the response status and ensure the invoice data is correctly returned.
 func TestCreateInvoiceHandler(t *testing.T) {
 	store := NewMockInvoiceStore()
-	handler := invoice_handlers.InvoiceHandlers{Store: store}
+	handler := InvoiceHandlers{Store: store}
 
 	// Input data for a new invoice
 	newInvoice := &models.Invoice{SalesOrderID: 1, CustomerID: 123, Amount: 250.75, Status: "Pending"}
@@ -139,7 +139,7 @@ func TestCreateInvoiceHandler(t *testing.T) {
 //   - Verify the response status and invoice data.
 func TestGetInvoiceByIDHandler(t *testing.T) {
 	store := NewMockInvoiceStore()
-	handler := invoice_handlers.InvoiceHandlers{Store: store}
+	handler := InvoiceHandlers{Store: store}
 
 	// Add an invoice to the mock store
 	store.CreateInvoice(&models.Invoice{SalesOrderID: 2, CustomerID: 456, Amount: 500.00, Status: "Paid"})
@@ -170,7 +170,7 @@ func TestGetInvoiceByIDHandler(t *testing.T) {
 //   - Verify the response status and updated data.
 func TestUpdateInvoiceHandler(t *testing.T) {
 	store := NewMockInvoiceStore()
-	handler := invoice_handlers.InvoiceHandlers{Store: store}
+	handler := InvoiceHandlers{Store: store}
 
 	// Add an invoice to the mock store
 	store.CreateInvoice(&models.Invoice{SalesOrderID: 3, CustomerID: 789, Amount: 150.00, Status: "Pending"})
@@ -205,7 +205,7 @@ func TestUpdateInvoiceHandler(t *testing.T) {
 //   - Verify the response status and ensure the invoice is deleted.
 func TestDeleteInvoiceHandler(t *testing.T) {
 	store := NewMockInvoiceStore()
-	handler := invoice_handlers.InvoiceHandlers{Store: store}
+	handler := InvoiceHandlers{Store: store}
 
 	// Add an invoice to the mock store
 	store.CreateInvoice(&models.Invoice{SalesOrderID: 5, CustomerID: 123, Amount: 700.00, Status: "Unpaid"})

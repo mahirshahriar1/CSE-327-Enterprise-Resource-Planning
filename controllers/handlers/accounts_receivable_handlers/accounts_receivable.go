@@ -18,7 +18,7 @@ import (
 // It interacts with the ReceivableStore for receivable records and the TransactionStore
 // for associated financial transactions.
 type AccountsReceivableHandler struct {
-	ReceivableStore  models.ReceivableStore          // Store for managing receivable records.
+	ReceivableStore  models.ReceivableStore           // Store for managing receivable records.
 	TransactionStore models.FinancialTransactionStore // Store for managing related financial transactions.
 }
 
