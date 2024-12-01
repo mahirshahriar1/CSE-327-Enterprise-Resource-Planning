@@ -35,20 +35,20 @@ This section details how to run and interact with the ERP system.  Remember to r
    ```bash
    createdb -U postgres -p 5432 erp
    ```
-2. **Run Migrations:**  Execute the database migration scripts to set up the necessary tables and schema.  The location of these scripts will depend on your project structure.  Example (replace with the actual path):
+2. **Run Migrations:**  Execute the database migration scripts to set up the necessary tables and schema.
    ```bash
-   psql -U postgres -d erp -f ./migrations/init.sql 
+   make migrate
    ```
 
 
 ## 1. Clone the Project
 
 - Open your terminal and navigate to your desired project directory.
-- Run the command: `git clone <your_git_repo_url>`  (Replace `<your_git_repo_url>` with your actual repository URL)
+- Run the command: `git clone https://github.com/mahirshahriar1/CSE-327-Enterprise-Resource-Planning.git`
 
 ## 2. Navigate to the Project Directory
 
-- `cd <your_project_directory>` (Replace `<your_project_directory>` with your project's directory name)
+- `cd erp`
 
 ## 3. Set Environment Variables
 
@@ -67,12 +67,12 @@ DB_PORT=5432
 
 ## 4. Run the Project
 
--  Run the following command to start the ERP system: `go run main.go` (or adjust this command to match your project's startup command).
+-  Run the following command to start the ERP system: `go run main.go` or `make run`
 
 
 ## 5. Access the System
 
-- Once the application has started, access the ERP system via your web browser at `http://localhost:8080` (or the appropriate address/port specified by your application).
+- Once the application has started, access the ERP system via your web browser at `http://localhost:8080` (or the appropriate address/port specified).
 
 
 
